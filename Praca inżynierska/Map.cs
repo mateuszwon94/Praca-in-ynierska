@@ -12,7 +12,7 @@ using static PracaInzynierska.LoadedTextures;
 namespace PracaInzynierska {
 	class Map {
 		Map() {
-
+			int cos = r.Next();
 		}
 
 		public MapField this[int i, int j] {
@@ -20,6 +20,7 @@ namespace PracaInzynierska {
 			private	set { Grid[i][j] = value; }
 		}
 
+		private static Random r = new Random();
 		private List<List<MapField>> Grid;
 	}
 }
