@@ -16,13 +16,20 @@ namespace PracaInzynierska {
 		/// </summary>
 		/// <param name="texture">Obraz z jakiego ma zostac wylosowana tekstora</param>
 		public MapField(Image texture) {
-			Size = 20;
+			if (texture.Equals(GrassTexture))
+				FieldSeed = MapSeedValues.Grass;
+			else if (texture.Equals(RockTexture))
+				FieldSeed = MapSeedValues.Rock;
+			else if (texture.Equals(SandTexture))
+				FieldSeed = MapSeedValues.Sand;
 			FieldImage = texture;
+			Size = 20;
 
 			int WhereX = r.Next((int)(texture.Size.X - Size));
 			int WhereY = r.Next((int)(texture.Size.Y - Size));
+			TextureRect = new IntRect(WhereX, WhereY, Size, Size);
 
-			Field = new Sprite(new Texture(texture, new IntRect(WhereX, WhereY, (int)Size, (int)Size)));
+			Field = new Sprite(new Texture(texture, TextureRect));
 			Field.Texture.Smooth = true;
 		}
 
@@ -49,6 +56,10 @@ namespace PracaInzynierska {
 		/// Tekstura ktora posluzyla do zainicjalizowania tego pola
 		/// </summary>
 		public Image FieldImage { get; private set; }
+
+		public MapSeedValues FieldSeed { get; private set; }
+
+		public IntRect TextureRect { get; private set; }
 
 		private static Random r = new Random();
 	}

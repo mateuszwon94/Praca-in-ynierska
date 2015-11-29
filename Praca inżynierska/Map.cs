@@ -84,6 +84,26 @@ namespace PracaInzynierska {
 					Grid[i][j].Field.Position = new Vector2f(i * Grid[i][j].Size, j * Grid[i][j].Size);
 				}
 			}
+
+			//Zmienianie odpowiednie tekstur
+			for (int i = 0; i < Size; ++i) {
+				for (int j = 0; j < Size; ++j) {
+					Image curImage = Grid[i][j].Field.Texture.CopyToImage();
+                    for (int k = -1; k <= 1; ++k) {
+						for (int l = -1; l <= 1; ++l) {
+							if (k != 0 && l != 0) {
+								try {
+									if (Grid[i][j].FieldSeed != Grid[i+k][j+l].FieldSeed) {
+										
+									}
+								} catch (IndexOutOfRangeException) {
+									continue;
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 
 		internal void Map_MouseWheelScrolled(object sender, MouseWheelScrollEventArgs e) {
