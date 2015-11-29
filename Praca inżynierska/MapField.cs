@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SFML.Window;
 using SFML.Audio;
 using SFML.Graphics;
 using SFML.System;
+using SFML.Window;
 using static PracaInzynierska.LoadedTextures;
 
 namespace PracaInzynierska {
@@ -16,13 +16,14 @@ namespace PracaInzynierska {
 		/// </summary>
 		/// <param name="texture">Obraz z jakiego ma zostac wylosowana tekstora</param>
 		public MapField(Image texture) {
-			Size = 25;
-			FieldTexture = texture;
+			Size = 20;
+			FieldImage = texture;
 
 			int WhereX = r.Next((int)(texture.Size.X - Size));
 			int WhereY = r.Next((int)(texture.Size.Y - Size));
 
 			Field = new Sprite(new Texture(texture, new IntRect(WhereX, WhereY, (int)Size, (int)Size)));
+			Field.Texture.Smooth = true;
 		}
 
 		/// <summary>
@@ -42,12 +43,12 @@ namespace PracaInzynierska {
 		/// <summary>
 		/// Obiekt slozacy do rysowania pola
 		/// </summary>
-		public Sprite Field { get; private set; }
+		public Sprite Field { get; internal set; }
 
 		/// <summary>
 		/// Tekstura ktora posluzyla do zainicjalizowania tego pola
 		/// </summary>
-		public Image FieldTexture { get; private set; }
+		public Image FieldImage { get; private set; }
 
 		private static Random r = new Random();
 	}

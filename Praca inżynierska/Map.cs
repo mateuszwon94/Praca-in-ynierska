@@ -16,7 +16,7 @@ namespace PracaInzynierska {
 		/// Konstruktor tworzacy plansze o zadanym rozmiarze
 		/// </summary>
 		/// <param name="size">Rozmiar planszy</param>
-		public Map(int size) {
+		public Map(int size, MapSeed mapSeed) {
 			// Inicjalizacja rozmiaru i pol
 			Size = size;
 			Grid = new List<List<MapField>>(Size);
@@ -29,28 +29,34 @@ namespace PracaInzynierska {
 			// Inicjalizacja losowych miejsc na planszy jako ziaren do ulozenia terenu
 			List<Vector2i> positions = new List<Vector2i>();
 			for (int i = 0; i < 3; ++i) {
-				int howMany = 0;
-				while (howMany > Size % 10) {
+				Image tx;
+                int howMany = 0;
+				int max;
+				switch (i) {
+					case 0:
+						tx = SandTexture;
+						max = mapSeed[MapSeedValues.Sand];
+						break;
+					case 1:
+						tx = GrassTexture;
+						max = mapSeed[MapSeedValues.Grass];
+						break;
+					case 2:
+						tx = RockTexture;
+						max = mapSeed[MapSeedValues.Rock];
+						break;
+					default:
+						tx = null;
+						max = 0;
+						break;
+				}
+				
+				while (howMany < max) {
 					int posX = r.Next(Size);
 					int posY = r.Next(Size);
 					if (Grid[posX][posY] == null) {
-						Image tx = null;
-						switch (i) {
-							case 0:
-								tx = RockTexture;
-								break;
-							case 1:
-								tx = SandTexture;
-								break;
-							case 2:
-								tx = GrassTexture;
-								break;
-						}
 						Grid[posX][posY] = new MapField(tx);
 						positions.Add(new Vector2i(posX, posY));
-						Console.Write(posX);
-						Console.Write(" - ");
-						Console.WriteLine(posY);
 						++howMany;
                     }
 				}
@@ -72,13 +78,26 @@ namespace PracaInzynierska {
 						}
 
 						//inicjalizacja odpowiedniego pola odpowiednia tekstura
-						Grid[i][j] = new MapField(Grid[nearestSeed.X][nearestSeed.Y].FieldTexture);
+						Grid[i][j] = new MapField(Grid[nearestSeed.X][nearestSeed.Y].FieldImage);
                     }
 
 					Grid[i][j].Field.Position = new Vector2f(i * Grid[i][j].Size, j * Grid[i][j].Size);
 				}
 			}
 		}
+
+		internal void Map_MouseWheelScrolled(object sender, MouseWheelScrollEventArgs e) {
+			/*
+			for (int i = 0; i < Size; ++i) {
+				for (int j = 0; j < Size; ++j) {
+					Grid[i][j].Field.Scale = new Vector2f(Grid[i][j].Field.Scale.X + e.Delta, 
+														  Grid[i][j].Field.Scale.Y + e.Delta);
+
+				}
+			}*/
+        }
+
+		
 
 		/// <summary>
 		/// Funkcja rysujaca teksture
@@ -88,8 +107,12 @@ namespace PracaInzynierska {
 		public void Draw(RenderTarget target, RenderStates states) {
 			for (int i = 0; i < Size; ++i) {
 				for (int j = 0; j < Size; ++j) {
-					target.Draw(Grid[i][j].Field);
-                }
+					if (Grid[i][j].Field.Position.X >= -Grid[i][j].Size && 
+						Grid[i][j].Field.Position.X <= Program.window.Size.X && 
+						Grid[i][j].Field.Position.Y >= -Grid[i][j].Size && 
+						Grid[i][j].Field.Position.Y <= Program.window.Size.Y)
+						target.Draw(Grid[i][j].Field);
+				}
 			}
 		}
 
@@ -103,6 +126,40 @@ namespace PracaInzynierska {
 					get { return Grid[i][j]; }
 			private	set { Grid[i][j] = value; }
 		}
+		
+		/// <summary>
+		/// Poruszanie mapa
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		internal void Map_MouseMoved(object sender, MouseMoveEventArgs e) {
+			if (prevMousePos == null) {
+				prevMousePos = new Vector2f(e.X, e.Y);
+				return;
+			}
+			float dx = e.X - prevMousePos.Value.X;
+			float dy = e.Y - prevMousePos.Value.Y;
+
+			if (Mouse.IsButtonPressed(Mouse.Button.Middle)) {
+				for (int i = 0; i < Size; ++i) {
+					for (int j = 0; j < Size; ++j) {
+						float x = (Grid[i][j].Field.Position.X + dx);
+						float y = (Grid[i][j].Field.Position.Y + dy);
+						Grid[i][j].Field.Position = new Vector2f(x, y);
+					}
+				}
+			}
+
+			prevMousePos = new Vector2f(e.X, e.Y);
+		}
+
+		internal void Map_Resized(object sender, SizeEventArgs e) {
+			/*for (int i = 0; i < Size; ++i) {
+				for (int j = 0; j < Size; ++j) {
+					Grid[i][j].Field.Scale = new Vector2f((float)e.Height / Program.origWindowSize.X, (float)e.Width / Program.origWindowSize.Y);
+				}
+			}*/
+		}
 
 		/// <summary>
 		/// Rozmiar planszy
@@ -111,6 +168,6 @@ namespace PracaInzynierska {
 
 		private static Random r = new Random();
 		private List<List<MapField>> Grid;
-
+		private Vector2f? prevMousePos = null;
 	}
 }
