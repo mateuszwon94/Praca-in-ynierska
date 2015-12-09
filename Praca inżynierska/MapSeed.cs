@@ -12,14 +12,14 @@ namespace PracaInzynierska {
 			Rock = rock;
         }
 
-		public int this[MapSeedValues e] {
+		public int this[Value e] {
 			get {
 				switch (e) {
-					case MapSeedValues.Sand:
+					case Value.Sand:
 						return Sand;
-					case MapSeedValues.Grass:
+					case Value.Grass:
 						return Grass;
-					case MapSeedValues.Rock:
+					case Value.Rock:
 						return Rock;
 					default:
 						throw new NoSouchSeed();
@@ -30,11 +30,15 @@ namespace PracaInzynierska {
 		public int Sand;
 		public int Grass;
 		public int Rock;
+
+		public enum Value {
+			Sand, Grass, Rock
+		}
+
+		public static int MaxValue() { return 3; }
 	}
 
-	enum MapSeedValues {
-		Sand, Grass, Rock
-	}
+	
 
 	class NoSouchSeed : Exception { }
 }

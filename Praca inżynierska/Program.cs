@@ -12,23 +12,7 @@ using static PracaInzynierska.LoadedTextures;
 
 namespace PracaInzynierska {
 	class Program {
-		static void Main(string[] args) { 
-			init();
-
-			while (window.IsOpen) {
-				window.DispatchEvents();
-				window.Clear();
-				if (!init_th.IsAlive) {
-					window.Draw(map);
-				}
-				window.Display();
-			}
-		}
-
-		/// <summary>
-		/// Funkcja inicjalizujaca podstawowe elementy
-		/// </summary>
-		static void init() {
+		static void Main(string[] args) {
 			//Initialising window
 			window.Closed += (o, e) => window.Close();
 			window.KeyPressed += Window_KeyPressed;
@@ -38,25 +22,28 @@ namespace PracaInzynierska {
 			Text grad = new Text("Praca inżynierska", font);
 			Text who = new Text("Mateusz Winiarski", font);
 			Text topic = new Text("Sztuczna inteligencja w grach komputerowych\nna przykladzie logiki rozmytej, algorytmu stada\ni problemu najkrótszej ścieżki w grze 2D.", font);
-			/*
+			
 			window.Clear();
-			window.Draw(grad);
+			// window.Draw(grad);
 			window.Display();
-			*/
+			
+			//inicjalizacja tekstur
+			LoadTextures();
 
-			init_th = new Thread(() => {
-				//initialising textures
-				LoadTextures();
+			//inicjalizacja mapy
+			int mapSize = 100;
+			map = new Map(mapSize, new MapSeed(mapSize / 5, mapSize / 10, mapSize / 15));
 
-				//inicjalizacja mapy
-				int mapSize = 100;
-				map = new Map(mapSize, new MapSeed(mapSize / 5, mapSize / 10, mapSize / 15));
+			window.MouseMoved += map.Map_MouseMoved;
+			window.Resized += map.Map_Resized;
+			window.MouseWheelScrolled += map.Map_MouseWheelScrolled;
 
-				window.MouseMoved += map.Map_MouseMoved;
-				window.Resized += map.Map_Resized;
-				window.MouseWheelScrolled += map.Map_MouseWheelScrolled;
-            });
-			init_th.Start();
+			while (window.IsOpen) {
+				window.DispatchEvents();
+				window.Clear();
+				window.Draw(map);
+				window.Display();
+			}
 		}
 
 		private static void Window_KeyPressed(object sender, KeyEventArgs e) {
@@ -68,7 +55,6 @@ namespace PracaInzynierska {
 
 		internal static RenderWindow window = new RenderWindow(new VideoMode(1280, 720), "Praca inzynierska");
 		private static Map map;
-		private static Thread init_th;
 		internal static Vector2u origWindowSize;
     }
 }
