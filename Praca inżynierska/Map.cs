@@ -24,23 +24,29 @@ namespace PracaInzynierska {
 			for ( int i = 0 ; i < Size ; ++i ) {
 				Grid.Add(new List<MapField>(Size));
 				for ( int j = 0 ; j < Size ; ++j )
-					Grid[i].Add(new MapField());
+					Grid[i].Add(new MapField(i, j));
 			}
 
 			Parallel.For(0, Size, i => {
 				Parallel.For(0, Size, j => {
 					for ( int k = -1 ; k <= 1 ; ++k ) {
-						for ( int l = -1 ; l <= -1 ; ++l ) {
-							try {
-								this[i, j].Neighbour[k, l] = this[i + k, j + l];
-							} catch ( ArgumentOutOfRangeException ) {
+						for ( int l = -1 ; l <= 1 ; ++l ) {
+							if ( l == 0 && k == 0 )
 								this[i, j].Neighbour[k, l] = null;
+							else {
+								try {
+									this[i, j].Neighbour[k, l] = this[i + k, j + l];
+								} catch ( ArgumentOutOfRangeException ) {
+									this[i, j].Neighbour[k, l] = null;
+								}
 							}
 						}
 					}
 				});
 			});
 
+			//List<MapField> fields = new List<MapField>();
+			List<Thread> threads = new List<Thread>();
 			// Inicjalizacja losowych miejsc na planszy jako ziaren do ulozenia terenu
 			List<Vector2i> positions = new List<Vector2i>();
 			for ( MapSeed.Value i = 0 ; i < (MapSeed.Value)MapSeed.MaxValue() ; ++i ) {
@@ -51,9 +57,10 @@ namespace PracaInzynierska {
 					int posX = r.Next(Size);
 					int posY = r.Next(Size);
 					int howManyAdditions = 0;
-					if ( this[posX, posY].FieldSeed == null ) {
+					if ( !this[posX, posY].IsFieldSeed ) {
 						this[posX, posY].FieldSeed = i;
 						positions.Add(new Vector2i(posX, posY));
+						threads.Add(new Thread(() => { GenerateTerrain(this[posX, posY]); }));
 						++howMany;
 					} else
 						continue;
@@ -62,9 +69,10 @@ namespace PracaInzynierska {
 						int posXAdd = r.Next(-Size / 10, Size / 10);
 						int posYAdd = r.Next(-Size / 10, Size / 10);
 						try {
-							if ( this[posX + posXAdd, posY + posYAdd].FieldSeed == null ) {
-								Grid[posX + posXAdd][posY + posYAdd].FieldSeed = i;
+							if ( !this[posX + posXAdd, posY + posYAdd].IsFieldSeed ) {
+								this[posX + posXAdd, posY + posYAdd].FieldSeed = i;
 								positions.Add(new Vector2i(posX + posXAdd, posY + posYAdd));
+								threads.Add(new Thread(() => { GenerateTerrain(this[posX + posXAdd, posY + posYAdd]); }));
 								++howManyAdditions;
 							}
 						} catch ( ArgumentOutOfRangeException ) { }
@@ -72,11 +80,19 @@ namespace PracaInzynierska {
 				}
 			}
 
-			
+			/*threads.OrderBy(item => r.Next());
+
+			foreach ( var thread in threads ) {
+				thread.Start();
+			}
+
+			foreach ( var thread in threads ) {
+				thread.Join();
+			}*/
 
 			Parallel.For(0, Size, i => {
 				Parallel.For(0, Size, j => {
-					if ( this[i, j].FieldSeed == null ) {
+					if ( !this[i, j].IsFieldSeed ) {
 						// szukanie najblizszego ziarna
 						Vector2i nearestSeed = new Vector2i(0, 0);
 						double minDist = -1;
@@ -91,10 +107,43 @@ namespace PracaInzynierska {
 						//inicjalizacja odpowiedniego pola odpowiednia tekstura
 						this[i, j].FieldSeed = this[nearestSeed.X, nearestSeed.Y].FieldSeed;
 					}
-
-					this[i, j].Field.Position = new Vector2f(i * this[i, j].Size, j * this[i, j].Size);
 				});
             });
+		}
+
+		private void GenerateTerrain(MapField field) {
+			lock ( mutex ) {
+				if ((++count) % 100 == 0)
+					Console.WriteLine(count);
+			}
+
+			//List<MapField> fields = new List<MapField>();
+			List<Thread> threads = new List<Thread>();
+			for (int k = -1 ; k <=1 ;++k ) {
+				for ( int l = -1 ; l <= 1 ; ++l ) {
+					if ( k != 0 && l != 0 ) {
+						try {
+							if ( field.Neighbour[k, l] != null && !field.Neighbour[k, l].IsFieldSeed ) {
+								field.Neighbour[k, l].FieldSeed = field.FieldSeed;
+								threads.Add(new	Thread(() => { GenerateTerrain(field.Neighbour[k, l]); }));
+							}
+						} catch ( ArgumentOutOfRangeException ) {
+						} catch ( IndexOutOfRangeException ) { }
+
+					}
+				}
+			}
+
+			if ( threads.Count == 0 )
+				return;
+
+			threads.OrderBy(item => r.Next());
+
+			foreach ( var thread in threads ) 
+				thread.Start();
+
+			foreach ( var thread in threads ) 
+				thread.Join();
 		}
 
 		internal void Map_MouseWheelScrolled(object sender, MouseWheelScrollEventArgs e) {
@@ -118,7 +167,7 @@ namespace PracaInzynierska {
 		public void Draw(RenderTarget target, RenderStates states) {
 			for ( int i = 0 ; i < Size ; ++i ) {
 				for ( int j = 0 ; j < Size ; ++j ) {
-					if ( this[i, j].FieldSeed != null && this[i, j].Field.Position.X >= -this[i, j].Size &&
+					if ( this[i, j].IsFieldSeed && this[i, j].Field.Position.X >= -this[i, j].Size &&
 						this[i, j].Field.Position.X <= Program.window.Size.X &&
 						this[i, j].Field.Position.Y >= -this[i, j].Size &&
 						this[i, j].Field.Position.Y <= Program.window.Size.Y )
@@ -154,7 +203,7 @@ namespace PracaInzynierska {
 			if ( Mouse.IsButtonPressed(Mouse.Button.Middle) ) {
 				for ( int i = 0 ; i < Size ; ++i ) {
 					for ( int j = 0 ; j < Size ; ++j ) {
-						if ( this[i, j].FieldSeed != null ) {
+						if ( this[i, j].IsFieldSeed ) {
 							float x = (Grid[i][j].Field.Position.X + dx);
 							float y = (Grid[i][j].Field.Position.Y + dy);
 							Grid[i][j].Field.Position = new Vector2f(x, y);
@@ -182,5 +231,9 @@ namespace PracaInzynierska {
 		private static Random r = new Random();
 		private List<List<MapField>> Grid;
 		private Vector2f? prevMousePos = null;
+
+
+		private static int count = 0;
+		private static Mutex mutex = new Mutex();
 	}
 }

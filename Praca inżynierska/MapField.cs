@@ -11,20 +11,22 @@ using static PracaInzynierska.LoadedTextures;
 
 namespace PracaInzynierska {
 	class MapField : Drawable {
-		public MapField() {
+		public MapField(int x, int y) {
 			Size = 20;
 
 			Neighbour = new FieldNeighvours();
 			Neighbour[0, 0] = this;
 
-			FieldSeed = null;
+			Position = new Vector2i(x, y);
+
+			IsFieldSeed = false;
 		}
 		
 		/// <summary>
 		/// Konstruktor tworzacy pojedyncze pole na planszy
 		/// </summary>
 		/// <param name="texture">Obraz z jakiego ma zostac wylosowana tekstora</param>
-		public MapField(MapSeed.Value seed) : this() {
+		public MapField(int x, int y, MapSeed.Value seed) : this(x, y) {
 			FieldSeed = seed;
         }
 
@@ -36,7 +38,7 @@ namespace PracaInzynierska {
 		/// <param name="target">Cel na ktorym jest rysowana</param>
 		/// <param name="states">Stan</param>
 		public void Draw(RenderTarget target, RenderStates states) {
-			if (FieldSeed != null)
+			if (IsFieldSeed)
 				target.Draw(Field);
 		}
 		
@@ -55,16 +57,19 @@ namespace PracaInzynierska {
 		/// </summary>
 		public Image FieldImage { get; private set; }
 
-		public MapSeed.Value? FieldSeed {
+		public bool IsFieldSeed { get; private set; }
+
+		public MapSeed.Value FieldSeed {
 			get { return fieldSeed; }
 			set {
 				fieldSeed = value;
-				if ( value == null ) return;
+				IsFieldSeed = true;
+
 				switch ( fieldSeed ) {
 					case MapSeed.Value.Sand:
 						FieldImage = SandTexture;
 						MoveSpeed = 0.7f;
-						break;
+                        break;
 					case MapSeed.Value.Grass:
 						FieldImage = GrassTexture;
 						MoveSpeed = 0.9f;
@@ -74,8 +79,9 @@ namespace PracaInzynierska {
 						MoveSpeed = 0.0f;
 						break;
 					default:
-						fieldSeed = null;
-                        throw new NoSouchSeed();
+						IsFieldSeed = false;
+						throw new NoSouchSeed();
+
 				}
 
 				int WhereX = r.Next((int)(FieldImage.Size.X - Size));
@@ -84,6 +90,8 @@ namespace PracaInzynierska {
 
 				Field = new Sprite(new Texture(FieldImage, TextureRect));
 				Field.Texture.Smooth = true;
+
+				Field.Position = new Vector2f(Position.X * Size, Position.Y * Size);
 			}
 		}
 
@@ -106,6 +114,8 @@ namespace PracaInzynierska {
 			private MapField[,] neighbours;
         }
 
-		private MapSeed.Value? fieldSeed;
+		private MapSeed.Value fieldSeed;
+
+		public Vector2i Position { get; private set; }
     }
 }
