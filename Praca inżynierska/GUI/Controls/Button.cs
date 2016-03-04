@@ -20,14 +20,22 @@ namespace PracaInzynierska.GUI.Controls {
 		override public void Draw(RenderTarget target, RenderStates states) {
 			target.Draw(ButtonTexture);
 		}
-
-		public int Size { get; private set; }
-
+		
 		/// <summary>
 		/// Obiekt slozacy do rysowania pola
 		/// </summary>
 		public Sprite ButtonTexture { get; internal set; }
 
+		public Vector2f Position {
+			get {
+				return ButtonTexture.Position;
+			}
+		}
 
+		public Vector2u Size {
+			get {
+				return ButtonTexture.Texture.Size;
+			}
+		}
 	}
 }
