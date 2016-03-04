@@ -7,7 +7,7 @@ using SFML.Audio;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
-using static PracaInzynierska.LoadedTextures;
+using static PracaInzynierska.Textures.LoadedTextures.MapTextures;
 
 namespace PracaInzynierska {
 	class MapField : Drawable {
@@ -38,8 +38,9 @@ namespace PracaInzynierska {
 		/// <param name="target">Cel na ktorym jest rysowana</param>
 		/// <param name="states">Stan</param>
 		public void Draw(RenderTarget target, RenderStates states) {
-			if (IsFieldSeed)
+			if ( IsFieldSeed ) {
 				target.Draw(Field);
+			}
 		}
 		
 		/// <summary>
@@ -51,7 +52,7 @@ namespace PracaInzynierska {
 		/// Obiekt slozacy do rysowania pola
 		/// </summary>
 		public Sprite Field { get; internal set; }
-
+		
 		/// <summary>
 		/// Tekstura ktora posluzyla do zainicjalizowania tego pola
 		/// </summary>
@@ -107,7 +108,7 @@ namespace PracaInzynierska {
             }
 
 			public MapField this[int x, int y] {
-				set { neighbours[x + 1, y + 1] = value; }
+				internal set { neighbours[x + 1, y + 1] = value; }
 				get { return neighbours[x + 1, y + 1]; }
 			}
 
@@ -117,5 +118,14 @@ namespace PracaInzynierska {
 		private MapSeed.Value fieldSeed;
 
 		public Vector2i Position { get; private set; }
+
+		public Men UnitOn { get; set; }
+
+		public bool IsInside(Vector2f position) {
+			if ( position.X >= Field.Position.X && position.X <= Field.Position.X + Field.Texture.Size.X &&
+					position.Y >= Field.Position.Y && position.Y <= Field.Position.Y + Field.Texture.Size.Y )
+				return true;
+			return false;
+		}
     }
 }

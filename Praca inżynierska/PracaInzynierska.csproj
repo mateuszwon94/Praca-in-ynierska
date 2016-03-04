@@ -58,6 +58,10 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AForge, Version=2.2.5.0, Culture=neutral, PublicKeyToken=c1db6ff4eaa06aeb, processorArchitecture=MSIL">
+      <HintPath>..\packages\AForge.2.2.5\lib\AForge.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="sfmlnet-audio-2, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Graphnode.SFML.Net.2.3\lib\sfmlnet-audio-2.dll</HintPath>
       <Private>True</Private>
@@ -86,26 +90,19 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="Tao.OpenGl, Version=0.0.0.0, Culture=neutral">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Tao.OpenGl.dll</HintPath>
-    </Reference>
-    <Reference Include="Tao.OpenGl.ExtensionLoader, Version=1.5.0.3, Culture=neutral">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\Tao.OpenGl.ExtensionLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="tguinet, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\tguinet.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GUI\Controls\Button.cs" />
+    <Compile Include="GUI\GUI.cs" />
+    <Compile Include="GUI\GUIElement.cs" />
     <Compile Include="MapSeed.cs" />
     <Compile Include="MapField.cs" />
     <Compile Include="Map.cs" />
-    <Compile Include="LoadedTextures.cs" />
+    <Compile Include="Textures\LoadedTextures.cs" />
+    <Compile Include="Beeing\Men.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UpdateEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -143,13 +140,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="openal32.dll" />
-    <Content Include="Tao.OpenGl.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Tao.OpenGl.ExtensionLoader.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Textures\grass.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Textures\K.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Textures\rock.jpg">
@@ -157,9 +151,6 @@
     </Content>
     <Content Include="Textures\sand.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tguinet.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

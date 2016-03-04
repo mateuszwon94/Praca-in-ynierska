@@ -8,7 +8,7 @@ using SFML.Window;
 using SFML.Audio;
 using SFML.Graphics;
 using SFML.System;
-using static PracaInzynierska.LoadedTextures;
+using static PracaInzynierska.Textures.LoadedTextures;
 using static System.Math;
 
 namespace PracaInzynierska {
@@ -80,16 +80,6 @@ namespace PracaInzynierska {
 				}
 			}
 
-			/*threads.OrderBy(item => r.Next());
-
-			foreach ( var thread in threads ) {
-				thread.Start();
-			}
-
-			foreach ( var thread in threads ) {
-				thread.Join();
-			}*/
-
 			Parallel.For(0, Size, i => {
 				Parallel.For(0, Size, j => {
 					if ( !this[i, j].IsFieldSeed ) {
@@ -110,6 +100,21 @@ namespace PracaInzynierska {
 				});
             });
 		}
+
+		public void Update(TimeSpan t) {
+			OnRaiseUpdateEvent(new UpdateEventArgs(t));
+		}
+		
+		
+		protected virtual void OnRaiseUpdateEvent(UpdateEventArgs e) {
+			EventHandler<UpdateEventArgs> handler = UpdateTime;
+			
+			if ( handler != null ) {
+				handler(this, e);
+			}
+
+		}
+
 
 		private void GenerateTerrain(MapField field) {
 			lock ( mutex ) {
@@ -156,9 +161,7 @@ namespace PracaInzynierska {
 				}
 			}*/
 		}
-
-
-
+		
 		/// <summary>
 		/// Funkcja rysujaca teksture
 		/// </summary>
@@ -227,6 +230,11 @@ namespace PracaInzynierska {
 		/// Rozmiar planszy
 		/// </summary>
 		public int Size { get; private set; }
+
+		/// <summary>
+		/// Event odpowiadający za zachowanie wszystkiego.
+		/// </summary>
+		public event EventHandler<UpdateEventArgs> UpdateTime;
 
 		private static Random r = new Random();
 		private List<List<MapField>> Grid;
