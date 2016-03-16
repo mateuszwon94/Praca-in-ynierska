@@ -8,6 +8,7 @@ using SFML.Window;
 using SFML.Audio;
 using SFML.Graphics;
 using SFML.System;
+using PracaInzynierska.Events;
 using static PracaInzynierska.Textures.LoadedTextures;
 using static System.Math;
 
@@ -20,11 +21,45 @@ namespace PracaInzynierska {
 		public Map(int size, MapSeed mapSeed) {
 			// Inicjalizacja rozmiaru i pol
 			Size = size;
+
+			MapSeed.Value[,] mapSeedValue = new MapSeed.Value[size, size];
+
+			Vector2i pos;
+			List<Vector2i> posList = new List<Vector2i>();
+			while ( mapSeed ) {
+				do {
+					pos = new Vector2i(r.Next(size), r.Next(size));
+				} while ( mapSeedValue[pos.X, pos.Y] != MapSeed.Value.None );
+				
+				mapSeedValue[pos.X, pos.Y] = mapSeed.Next();
+				posList.Add(pos);
+			}
+
+			for ( int i = 0 ; i < size ; i++ ) {
+				for ( int j = 0 ; j < size ; j++ ) {
+
+					double minDist = double.MaxValue;
+					MapSeed.Value seedValue = MapSeed.Value.None;
+
+					foreach ( var position in posList ) {
+						double dist = Sqrt(Pow(position.X - i, 2) + Pow(position.Y - j, 2));
+						if (dist < minDist) {
+							minDist = dist;
+							seedValue = mapSeedValue[position.X, position.Y];
+						}
+					}
+
+					mapSeedValue[i, j] = seedValue;
+				}
+			}
+
 			Grid = new List<List<MapField>>(Size);
 			for ( int i = 0 ; i < Size ; ++i ) {
 				Grid.Add(new List<MapField>(Size));
-				for ( int j = 0 ; j < Size ; ++j )
-					Grid[i].Add(new MapField(i, j));
+				for ( int j = 0 ; j < Size ; ++j ) {
+					Grid[i].Add(new MapField(i, j, mapSeedValue[i, j]));
+					MapMoved += Grid[i][j].MapMoved;
+				}
 			}
 
 			Parallel.For(0, Size, i => {
@@ -44,78 +79,54 @@ namespace PracaInzynierska {
 					}
 				});
 			});
-
-			//List<MapField> fields = new List<MapField>();
-			List<Thread> threads = new List<Thread>();
-			// Inicjalizacja losowych miejsc na planszy jako ziaren do ulozenia terenu
-			List<Vector2i> positions = new List<Vector2i>();
-			for ( MapSeed.Value i = 0 ; i < (MapSeed.Value)MapSeed.MaxValue() ; ++i ) {
-				int howMany = 0;
-				int max = mapSeed[i];
-
-				while ( howMany < max ) {
-					int posX = r.Next(Size);
-					int posY = r.Next(Size);
-					int howManyAdditions = 0;
-					if ( !this[posX, posY].IsFieldSeed ) {
-						this[posX, posY].FieldSeed = i;
-						positions.Add(new Vector2i(posX, posY));
-						threads.Add(new Thread(() => { GenerateTerrain(this[posX, posY]); }));
-						++howMany;
-					} else
-						continue;
-
-					while ( howManyAdditions <= max / 2 ) {
-						int posXAdd = r.Next(-Size / 10, Size / 10);
-						int posYAdd = r.Next(-Size / 10, Size / 10);
-						try {
-							if ( !this[posX + posXAdd, posY + posYAdd].IsFieldSeed ) {
-								this[posX + posXAdd, posY + posYAdd].FieldSeed = i;
-								positions.Add(new Vector2i(posX + posXAdd, posY + posYAdd));
-								threads.Add(new Thread(() => { GenerateTerrain(this[posX + posXAdd, posY + posYAdd]); }));
-								++howManyAdditions;
-							}
-						} catch ( ArgumentOutOfRangeException ) { }
-					}
-				}
-			}
-
-			Parallel.For(0, Size, i => {
-				Parallel.For(0, Size, j => {
-					if ( !this[i, j].IsFieldSeed ) {
-						// szukanie najblizszego ziarna
-						Vector2i nearestSeed = new Vector2i(0, 0);
-						double minDist = -1;
-						foreach ( var seed in positions ) {
-							double dist = Sqrt(Pow(i * i - seed.X * seed.X, 2) + Pow(j * j - seed.Y * seed.Y, 2));
-							if ( minDist == -1 || dist < minDist ) {
-								minDist = dist;
-								nearestSeed = seed;
-							}
-						}
-
-						//inicjalizacja odpowiedniego pola odpowiednia tekstura
-						this[i, j].FieldSeed = this[nearestSeed.X, nearestSeed.Y].FieldSeed;
-					}
-				});
-            });
 		}
 
+		private void MoveMap(MapMovedEventArgs e) {
+			EventHandler<MapMovedEventArgs> handler = MapMoved;
+
+			if ( handler != null && (e.dx != 0f || e.dy != 0f)) {
+				handler(this, e);
+			}
+		}
+		
 		public void Update(TimeSpan t) {
 			OnRaiseUpdateEvent(new UpdateEventArgs(t));
 		}
-		
-		
+				
 		protected virtual void OnRaiseUpdateEvent(UpdateEventArgs e) {
 			EventHandler<UpdateEventArgs> handler = UpdateTime;
-			
+
 			if ( handler != null ) {
 				handler(this, e);
 			}
 
+			float dx = 0f;
+			float dy = 0f;
+
+			if ( Keyboard.IsKeyPressed(Keyboard.Key.Up) ) {
+				dy += 50;
+			}
+			if ( Keyboard.IsKeyPressed(Keyboard.Key.Down) ) {
+				dy -= 50;
+			}
+
+			if ( Keyboard.IsKeyPressed(Keyboard.Key.Left) ) {
+				dx += 50;
+			}
+			if ( Keyboard.IsKeyPressed(Keyboard.Key.Right) ) {
+				dx -= 50;
+			}
+
+			if (Keyboard.IsKeyPressed(Keyboard.Key.LShift) || Keyboard.IsKeyPressed(Keyboard.Key.RShift) ) {
+				dx *= 10;
+				dy *= 10;
+			}
+
+			dx *= e.UpdateTime;
+			dy *= e.UpdateTime;
+			MoveMap(new MapMovedEventArgs(dx, dy));
 		}
-
-
+		
 		private void GenerateTerrain(MapField field) {
 			lock ( mutex ) {
 				if ((++count) % 100 == 0)
@@ -200,19 +211,10 @@ namespace PracaInzynierska {
 				prevMousePos = new Vector2f(e.X, e.Y);
 				return;
 			}
-			float dx = e.X - prevMousePos.Value.X;
-			float dy = e.Y - prevMousePos.Value.Y;
 
 			if ( Mouse.IsButtonPressed(Mouse.Button.Middle) ) {
-				for ( int i = 0 ; i < Size ; ++i ) {
-					for ( int j = 0 ; j < Size ; ++j ) {
-						if ( this[i, j].IsFieldSeed ) {
-							float x = (Grid[i][j].Field.Position.X + dx);
-							float y = (Grid[i][j].Field.Position.Y + dy);
-							Grid[i][j].Field.Position = new Vector2f(x, y);
-						}
-					}
-				}
+				Console.WriteLine("AAA");
+				MoveMap(new MapMovedEventArgs(e.X - prevMousePos.Value.X, e.Y - prevMousePos.Value.Y));
 			}
 
 			prevMousePos = new Vector2f(e.X, e.Y);
@@ -235,6 +237,7 @@ namespace PracaInzynierska {
 		/// Event odpowiadający za zachowanie wszystkiego.
 		/// </summary>
 		public event EventHandler<UpdateEventArgs> UpdateTime;
+		public event EventHandler<MapMovedEventArgs> MapMoved;
 
 		private static Random r = new Random();
 		private List<List<MapField>> Grid;

@@ -8,6 +8,9 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using static PracaInzynierska.Textures.LoadedTextures.MapTextures;
+using PracaInzynierska.Beeing;
+using PracaInzynierska.GUI;
+using PracaInzynierska.Events;
 
 namespace PracaInzynierska {
 	class MapField : Drawable {
@@ -108,8 +111,8 @@ namespace PracaInzynierska {
             }
 
 			public MapField this[int x, int y] {
-				internal set { neighbours[x + 1, y + 1] = value; }
 				get { return neighbours[x + 1, y + 1]; }
+				internal set { neighbours[x + 1, y + 1] = value; }
 			}
 
 			private MapField[,] neighbours;
@@ -119,6 +122,15 @@ namespace PracaInzynierska {
 
 		public Vector2i Position { get; private set; }
 
+		public Vector2f ScreenPosition {
+			get {
+				return Field.Position;
+			}
+			set {
+				Field.Position = value;
+			}
+		}
+
 		public Men UnitOn { get; set; }
 
 		public bool IsInside(Vector2f position) {
@@ -127,5 +139,9 @@ namespace PracaInzynierska {
 				return true;
 			return false;
 		}
-    }
+
+		internal void MapMoved(object sender, MapMovedEventArgs e) {
+			ScreenPosition = new Vector2f(ScreenPosition.X + e.dx, ScreenPosition.Y + e.dy);
+		}
+	}
 }

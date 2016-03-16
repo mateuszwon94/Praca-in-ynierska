@@ -8,6 +8,7 @@ using SFML.Audio;
 using SFML.System;
 using SFML.Window;
 using PracaInzynierska;
+using PracaInzynierska.Events;
 
 namespace PracaInzynierska.Beeing {
 	class Men : Drawable {
@@ -25,8 +26,8 @@ namespace PracaInzynierska.Beeing {
 		}
 
 		private void UpdateTime(object sender, UpdateEventArgs e) {
-			this.Position = new Vector2f(Position.X + 5f * e.UpdateTime, Position.Y + 5f * e.UpdateTime);
-			Console.WriteLine("Jestem na pozycji ({0}, {1}).", Location.Position.X, Location.Position.Y);
+			this.Position = new Vector2f(Position.X + 10f * e.UpdateTime, Position.Y + 10f * e.UpdateTime);
+			//Console.WriteLine("Jestem na pozycji ({0}, {1}).", Location.Position.X, Location.Position.Y);
 		}
 
 		public Sprite Texture { get; private set; }

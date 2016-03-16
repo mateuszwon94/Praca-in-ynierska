@@ -5,7 +5,7 @@ using System.Text;
 using SFML.System;
 using System.Threading.Tasks;
 
-namespace PracaInzynierska {
+namespace PracaInzynierska.Events {
 	class UpdateEventArgs : EventArgs {
 
 		public UpdateEventArgs(TimeSpan t) : base() {

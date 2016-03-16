@@ -10,31 +10,25 @@ using SFML.Window;
 using PracaInzynierska;
 
 namespace PracaInzynierska.GUI {
-	class GUI : List<GUIElement>, Drawable {
+	class GUIBase : List<GUIElement>, Drawable {
 
-		GUI(RenderWindow window) : base() {
+		public GUIBase(RenderWindow window) : base() {
 			AddEvents(window);
 		}
 
-		GUI(int capacity, RenderWindow window) : base(capacity) {
+		public GUIBase(int capacity, RenderWindow window) : base(capacity) {
 			AddEvents(window);
 		}
 
-		GUI(IEnumerable<GUIElement> collection, RenderWindow window) : base(collection) {
+		public GUIBase(IEnumerable<GUIElement> collection, RenderWindow window) : base(collection) {
 			AddEvents(window);
 		}
-
-		~GUI() {
-			Clear();
-		}
-
+		
 		private void AddEvents(RenderWindow window) {
 			window.KeyPressed += Window_KeyPressed;
 			window.KeyReleased += Window_KeyReleased;
 			window.MouseButtonPressed += Window_MouseButtonPressed;
 			window.MouseButtonReleased += Window_MouseButtonReleased;
-			window.MouseEntered += Window_MouseEntered;
-			window.MouseLeft += Window_MouseLeft;
 			window.MouseMoved += Window_MouseMoved;
 			window.MouseWheelScrolled += Window_MouseWheelScrolled;
 		}
@@ -44,8 +38,6 @@ namespace PracaInzynierska.GUI {
 			KeyReleased += item.GUI_KeyReleased;
 			MouseButtonPressed += item.GUI_MouseButtonPressed;
 			MouseButtonReleased += item.GUI_MouseButtonReleased;
-			MouseEntered += item.GUI_MouseEntered;
-			MouseLeft += item.GUI_MouseLeft;
 			MouseMoved += item.GUI_MouseMoved;
 			MouseWheelScrolled += item.GUI_MouseWheelScrolled;
 		}
@@ -55,8 +47,6 @@ namespace PracaInzynierska.GUI {
 			KeyReleased -= item.GUI_KeyReleased;
 			MouseButtonPressed -= item.GUI_MouseButtonPressed;
 			MouseButtonReleased -= item.GUI_MouseButtonReleased;
-			MouseEntered -= item.GUI_MouseEntered;
-			MouseLeft -= item.GUI_MouseLeft;
 			MouseMoved -= item.GUI_MouseMoved;
 			MouseWheelScrolled -= item.GUI_MouseWheelScrolled;
 		}
@@ -134,8 +124,6 @@ namespace PracaInzynierska.GUI {
 		public event EventHandler<KeyEventArgs> KeyReleased;
 		public event EventHandler<MouseButtonEventArgs> MouseButtonPressed;
 		public event EventHandler<MouseButtonEventArgs> MouseButtonReleased;
-		public event EventHandler<EventArgs> MouseEntered;
-		public event EventHandler<EventArgs> MouseLeft;
 		public event EventHandler<MouseMoveEventArgs> MouseMoved;
 		public event EventHandler<MouseWheelScrollEventArgs> MouseWheelScrolled;
 
@@ -151,22 +139,6 @@ namespace PracaInzynierska.GUI {
 
 		private void Window_MouseMoved(object sender, MouseMoveEventArgs e) {
 			EventHandler<MouseMoveEventArgs> handler = MouseMoved;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
-		}
-
-		private void Window_MouseLeft(object sender, EventArgs e) {
-			EventHandler<EventArgs> handler = MouseLeft;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
-		}
-
-		private void Window_MouseEntered(object sender, EventArgs e) {
-			EventHandler<EventArgs> handler = MouseEntered;
 
 			if ( handler != null ) {
 				handler(this, e);
