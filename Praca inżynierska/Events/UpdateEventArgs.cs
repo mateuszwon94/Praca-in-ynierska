@@ -6,14 +6,21 @@ using SFML.System;
 using System.Threading.Tasks;
 
 namespace PracaInzynierska.Events {
-	class UpdateEventArgs : EventArgs {
+	public class UpdateEventArgs : EventArgs {
 
-		public UpdateEventArgs(TimeSpan t) : base() {
-			UpdateTime = (float)t.TotalSeconds;
+		/// <summary>
+		/// Typ argumentu eventu wywolywanego przy każdym obieku petli gry
+		/// </summary>
+		/// <param name="t">Czas jaki uplynal od ostatniego wywolania</param>
+		public UpdateEventArgs(TimeSpan t) {
+			UpdateTime = t.TotalSeconds;
 			
 		}
 
-		public float UpdateTime { get; private set; }
+		/// <summary>
+		/// Cas jaki uplynal od ostatniego wywolania.
+		/// </summary>
+		public double UpdateTime { get; private set; }
 
 	}
 }

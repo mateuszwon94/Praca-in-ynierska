@@ -1,16 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PracaInzynierska.Exceptions;
 
-namespace PracaInzynierska {
-	struct MapSeed {
+namespace PracaInzynierska.Map {
+	public struct MapSeed {
 		public MapSeed(int sand, int grass, int rock) {
 			Sand = sand;
 			Grass = grass;
 			Rock = rock;
         }
+
+        public Value SeedFromIdx(int idx) {
+            if (idx > Sand + Grass) {
+				return Value.Rock;
+			} else if (idx > Sand) {
+				return Value.Grass;
+			} else {
+				return Value.Sand;
+			}
+		}
 
 		public int this[Value e] {
 			get {
@@ -30,7 +36,9 @@ namespace PracaInzynierska {
 		public int Sand { get; set; }
 		public int Grass { get; set; }
 		public int Rock { get; set; }
-		
+
+		public int Count => Sand + Grass + Rock;
+
 		public Value Next() {
 			if (Sand != 0) {
 				--Sand;
@@ -44,24 +52,15 @@ namespace PracaInzynierska {
 			}
 			return Value.None;
 		}
-
+        
 		public enum Value {
 			None = 0, Sand, Grass, Rock
 		}
 
 		public static int MaxValue() { return 3; }
-
+		
 		public static implicit operator bool(MapSeed val) {
-			if ( val.Grass + val.Rock + val.Sand != 0 ) {
-				return true;
-			} else {
-				return false;
-			}
+			return val.Count != 0;
 		}
 	}
-
-	
-
-	class NoSouchSeed : Exception { }
-	
 }

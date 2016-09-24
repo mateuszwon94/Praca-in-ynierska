@@ -8,31 +8,26 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using PracaInzynierska;
+using PracaInzynierska.Events;
 
-namespace PracaInzynierska.GUI {
-	class GUIBase : List<GUIElement>, Drawable {
+namespace PracaInzynierska.UserInterface {
+	public class GUI : List<GUIElement>, IEventItem, Drawable {
 
-		public GUIBase(RenderWindow window) : base() {
+		public GUI(RenderWindow window) {
+			Textures.GUITextures.GenerateAll(40, 100);
 			AddEvents(window);
 		}
 
-		public GUIBase(int capacity, RenderWindow window) : base(capacity) {
+		public GUI(int capacity, RenderWindow window) : base(capacity) {
+			Textures.GUITextures.GenerateAll(40, 100);
 			AddEvents(window);
 		}
 
-		public GUIBase(IEnumerable<GUIElement> collection, RenderWindow window) : base(collection) {
+		public GUI(IEnumerable<GUIElement> collection, RenderWindow window) : base(collection) {
+			Textures.GUITextures.GenerateAll(40, 100);
 			AddEvents(window);
 		}
 		
-		private void AddEvents(RenderWindow window) {
-			window.KeyPressed += Window_KeyPressed;
-			window.KeyReleased += Window_KeyReleased;
-			window.MouseButtonPressed += Window_MouseButtonPressed;
-			window.MouseButtonReleased += Window_MouseButtonReleased;
-			window.MouseMoved += Window_MouseMoved;
-			window.MouseWheelScrolled += Window_MouseWheelScrolled;
-		}
-
 		private void AddToEvents(GUIElement item) {
 			KeyPressed += item.GUI_KeyPressed;
 			KeyReleased += item.GUI_KeyReleased;
@@ -51,45 +46,44 @@ namespace PracaInzynierska.GUI {
 			MouseWheelScrolled -= item.GUI_MouseWheelScrolled;
 		}
 
-		new public void Add(GUIElement item) {
+		public new void Add(GUIElement item) {
 			base.Add(item);
 			AddToEvents(item);
 		}
 
-		new public void AddRange(IEnumerable<GUIElement> collection) {
+		public new void AddRange(IEnumerable<GUIElement> collection) {
 			base.AddRange(collection);
 			foreach (var item in collection) {
 				AddToEvents(item);
 			}
 		}
 
-		new public void Clear() {
+		public new void Clear() {
 			foreach	(var item in this) {
 				Remove(item);
 			}
 		}
 
-		new public void Insert(int index, GUIElement item) {
+		public new void Insert(int index, GUIElement item) {
 			base.Insert(index, item);
 			AddToEvents(item);
 		}
 
-		new public void InsertRange(int index, IEnumerable<GUIElement> collection) {
+		public new void InsertRange(int index, IEnumerable<GUIElement> collection) {
 			base.InsertRange(index, collection);
 			foreach ( var item in collection ) {
 				AddToEvents(item);
 			}
 		}
 
-		new public bool Remove(GUIElement item) {
-			if ( base.Remove(item) ) {
-				RemoveFromEvents(item);
-				return true;
-			}
-			return false;
+		public new bool Remove(GUIElement item) {
+			if ( !base.Remove(item) ) return false;
+
+			RemoveFromEvents(item);
+			return true;
 		}
 
-		new public int RemoveAll(Predicate<GUIElement> match) {
+		public new int RemoveAll(Predicate<GUIElement> match) {
 			List<GUIElement> items = FindAll(match);
 			foreach ( var item in items ) {
 				RemoveFromEvents(item);
@@ -97,28 +91,23 @@ namespace PracaInzynierska.GUI {
 			return base.RemoveAll(match);
 		}
 
-		new public void RemoveAt(int index) {
+		public new void RemoveAt(int index) {
 			RemoveFromEvents(this[index]);
 			base.RemoveAt(index);
 		}
 
-		new public void RemoveRange(int index, int count) {
-			for (int i = index ; i < index+count ; ++i ) {
+		public new void RemoveRange(int index, int count) {
+			for (int i = index ; i < index + count ; ++i ) {
 				RemoveFromEvents(this[i]);
 			}
 			base.RemoveRange(index, count);
 		}
-
-
 
 		public void Draw(RenderTarget target, RenderStates states) {
 			foreach ( var item in this ) {
 				item.Draw(target, states);
 			}
 		}
-
-
-
 
 		public event EventHandler<KeyEventArgs> KeyPressed;
 		public event EventHandler<KeyEventArgs> KeyReleased;
@@ -128,54 +117,44 @@ namespace PracaInzynierska.GUI {
 		public event EventHandler<MouseWheelScrollEventArgs> MouseWheelScrolled;
 
 
-		private void Window_MouseWheelScrolled(object sender, MouseWheelScrollEventArgs e) {
+		public void Window_MouseWheelScrolled(object sender, MouseWheelScrollEventArgs e) {
 			EventHandler<MouseWheelScrollEventArgs> handler = MouseWheelScrolled;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
+			handler?.Invoke(sender, e);
 		}
 
-
-		private void Window_MouseMoved(object sender, MouseMoveEventArgs e) {
+		public void Window_MouseMoved(object sender, MouseMoveEventArgs e) {
 			EventHandler<MouseMoveEventArgs> handler = MouseMoved;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
+			handler?.Invoke(sender, e);
 		}
 
-		private void Window_MouseButtonReleased(object sender, MouseButtonEventArgs e) {
+		public void Window_MouseButtonReleased(object sender, MouseButtonEventArgs e) {
 			EventHandler<MouseButtonEventArgs> handler = MouseButtonReleased;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
+			handler?.Invoke(sender, e);
 		}
 
-		private void Window_MouseButtonPressed(object sender, MouseButtonEventArgs e) {
+		public void Window_MouseButtonPressed(object sender, MouseButtonEventArgs e) {
 			EventHandler<MouseButtonEventArgs> handler = MouseButtonPressed;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
+			handler?.Invoke(sender, e);
 		}
 
-		private void Window_KeyReleased(object sender, KeyEventArgs e) {
+		public void Window_KeyReleased(object sender, KeyEventArgs e) {
 			EventHandler<KeyEventArgs> handler = KeyReleased;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
+			handler?.Invoke(sender, e);
 		}
 
-		private void Window_KeyPressed(object sender, KeyEventArgs e) {
+		public void Window_KeyPressed(object sender, KeyEventArgs e) {
 			EventHandler<KeyEventArgs> handler = KeyPressed;
-
-			if ( handler != null ) {
-				handler(this, e);
-			}
+			handler?.Invoke(sender, e);
 		}
-		
+
+		public void AddEvents(RenderWindow window) {
+			window.KeyPressed += Window_KeyPressed;
+			window.KeyReleased += Window_KeyReleased;
+			window.MouseButtonPressed += Window_MouseButtonPressed;
+			window.MouseButtonReleased += Window_MouseButtonReleased;
+			window.MouseMoved += Window_MouseMoved;
+			window.MouseWheelScrolled += Window_MouseWheelScrolled;
+		}
 	}
 }
+
