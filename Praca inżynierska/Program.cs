@@ -62,7 +62,7 @@ namespace PracaInzynierska {
 						  Name = "First Button",
 						  IsActive = true,
 						  ButtonTexture = new Sprite(NormalButtonTexture),
-						  ButtonText = new Text("Pierwszy!", font) {
+						  ButtonText = new Text("Zamknij!", font) {
 										   CharacterSize = 20,
 										   Color = Color.Black
 									   },
