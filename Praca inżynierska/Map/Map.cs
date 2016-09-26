@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using PracaInzynierska.Events;
 using PracaInzynierska.Exceptions;
@@ -12,15 +11,19 @@ using SFML.System;
 using SFML.Window;
 
 namespace PracaInzynierska.Map {
-	public sealed class Map : Drawable, IEnumerable<MapField> {
 
+    /// <summary>
+    /// Clasa reprezentujaca mape
+    /// </summary>
+	public sealed class Map : Drawable, IEnumerable<MapField> {
 		#region Constructors
 
-		/// <summary>
-		/// Konstruktor tworzacy plansze o zadanym rozmiarze
-		/// </summary>
-		/// <param name="size">Rozmiar planszy</param>
-		public Map(int size, MapSeed mapSeed) {
+	    /// <summary>
+	    /// Konstruktor tworzacy plansze o zadanym rozmiarze
+	    /// </summary>
+	    /// <param name="size">Rozmiar planszy</param>
+	    /// <param name="mapSeed">Okresla proporcje w występowaniu terenu</param>
+	    public Map(int size, MapSeed mapSeed) {
 			//Wygenerowanie tekstur pol planszy
 			MapTextures.GenerateAll((uint)MapField.Size);
 
@@ -29,19 +32,17 @@ namespace PracaInzynierska.Map {
 
 			MapSeed.Value[,] mapSeedValue = new MapSeed.Value[size, size];
 			Vector2i[] posList = new Vector2i[mapSeed.Count];
-			Random rand = new Random();
 
 			//Inicjalizacja startowyxh ziaren na mapie
 			Console.WriteLine("Initalizing seeds.");
 			for ( int i = 0 ; i < mapSeed.Count ; ++i ) {
 				try {
-					Vector2i pos;
+                    ref Vector2i pos = ref posList[i];
 					do {
 						pos.X = rand.Next(size);
 						pos.Y = rand.Next(size);
 					} while ( mapSeedValue[pos.X, pos.Y] != MapSeed.Value.None );
-					posList[i] = pos;
-					mapSeedValue[pos.X, pos.Y] = mapSeed.SeedFromIdx(i);
+					mapSeedValue[pos.X, pos.Y] = mapSeed[i];
 				} catch { Console.WriteLine("Error!"); }
 			}
 			Console.WriteLine("Start seeds initialized.");
@@ -91,40 +92,46 @@ namespace PracaInzynierska.Map {
 			Console.WriteLine("Map fields initialized.");
 		}
 
-		#endregion Constructors
+        #endregion Constructors
 
+        #region Events
+
+        /// <summary>
+        /// Event uruchamiany przy odswierzaniu mapy
+        /// </summary>
+        public event EventHandler<UpdateEventArgs> UpdateTime;
+
+        /// <summary>
+        /// Funkcja wywołująca event odswiezania mapy
+        /// </summary>
+        /// <param name="t">Czas jaki uplynal od ostatniego odswiezenia</param>
 		public void Update(TimeSpan t) {
-			OnRaiseUpdateEvent(new UpdateEventArgs(t));
-		}
+            OnRaiseUpdateEvent(new UpdateEventArgs(t));
+        }
 
-		/// <summary>
-		/// Funkcja rysujaca teksture
-		/// </summary>
-		/// <param name="target">Cel na ktorym jest rysowana</param>
-		/// <param name="states">Stan</param>
-		public void Draw(RenderTarget target, RenderStates states) {
-			for ( int i = 0 ; i < Size ; ++i ) {
-				for ( int j = 0 ; j < Size ; ++j ) {
-					if ( this[i, j].IsFieldSeed && (this[i, j].Field.Position.X >= -MapField.Size) &&
-						(this[i, j].Field.Position.X <= Program.window.Size.X) &&
-						(this[i, j].Field.Position.Y >= -MapField.Size) &&
-						(this[i, j].Field.Position.Y <= Program.window.Size.Y) ) {
-						target.Draw(this[i, j].Field, states);
-					}
-				}
-			}
-		}
+        #endregion Events
 
-		/// <summary>
-		/// Mozliwosc dostania sie do odpowiedniego pola na planszy
-		/// </summary>
-		/// <param name="i">Pierwsza wspolrzedna</param>
-		/// <param name="j">Druga wspolrzedna</param>
-		/// <returns></returns>
-		public MapField this[int i, int j] {
-			get { return Grid[i][j]; }
-			private set { Grid[i][j] = value; }
-		}
+        #region Drawable
+
+        /// <summary>
+        /// Funkcja rysujaca teksture
+        /// </summary>
+        /// <param name="target">Cel na ktorym jest rysowana</param>
+        /// <param name="states">Stan</param>
+        public void Draw(RenderTarget target, RenderStates states) {
+            for ( int i = 0 ; i < Size ; ++i ) {
+                for ( int j = 0 ; j < Size ; ++j ) {
+                    if ( this[i, j].IsFieldSeed && (this[i, j].Field.Position.X >= -MapField.Size) &&
+                         (this[i, j].Field.Position.X <= Program.window.Size.X) &&
+                         (this[i, j].Field.Position.Y >= -MapField.Size) &&
+                         (this[i, j].Field.Position.Y <= Program.window.Size.Y) ) {
+                        target.Draw(this[i, j].Field, states);
+                    }
+                }
+            }
+        }
+
+        #endregion Drawable
 
 		#region MapMoveing
 
@@ -159,10 +166,6 @@ namespace PracaInzynierska.Map {
 			}
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="e"></param>
 		private void OnRaiseUpdateEvent(UpdateEventArgs e) {
 			UpdateTime?.Invoke(this, e);
 
@@ -216,83 +219,81 @@ namespace PracaInzynierska.Map {
 			}
 
 			//Nowa delta, gdy stara przekroczylaby dopuszczalny wielkosc pol
-			else if ( MapField.Size + delta < 20 ) {
+			if ( MapField.Size + delta < 20 ) {
 				delta = MapField.Size - 20;
 			} else if ( MapField.Size + delta > 30 ) {
 				delta = 30 - MapField.Size;
 			}
 
-			if ( delta != 0 ) {
-				MapField.Size += delta;
+		    if ( delta == 0 ) return;
 
-				MapTextures.GenerateAll((uint)MapField.Size);
+		    MapField.Size += delta;
 
-				MapResized?.Invoke(this, new MapResizedEventArgs(delta));
-			}
+		    MapTextures.GenerateAll((uint)MapField.Size);
+
+		    MapResized?.Invoke(this, new MapResizedEventArgs(delta));
 		}
 
-		#endregion MapResizing
+        #endregion MapResizing
 
-		internal void Map_Resized(object sender, SizeEventArgs e) {
-			/*for (int i = 0; i < Size; ++i) {
-				for (int j = 0; j < Size; ++j) {
-					Grid[i][j].Field.Scale = new Vector2f((float)e.Height / Program.origWindowSize.X, (float)e.Width / Program.origWindowSize.Y);
-				}
-			}*/
-		}
+        #region Iterators
 
-		public IEnumerator<MapField> GetEnumerator() {
-			return new MapIterator(Grid);
-		}
+        /// <summary>
+        /// Funkcja generujaca odwolania do kolejnych pol na mapie zaczynajac od lewego gornego rogu
+        /// </summary>
+        /// <returns>Iterator po polach na mapie</returns>
+        public IEnumerator<MapField> GetEnumerator() {
+            for ( int i = 0 ; i < Size ; ++i ) {
+                for ( int j = 0 ; j < Size ; ++j ) { yield return this[i, j]; }
+            }
+        }
 
-		IEnumerator IEnumerable.GetEnumerator() {
-			return GetEnumerator();
-		}
+        /// <summary>
+        /// Funkcja generujaca odwolania do kolejnych pol na mapie zaczynajac od lewego gornego rogu
+        /// </summary>
+        /// <returns>Iterator po polach na mapie</returns>
+	    IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
+        }
 
-		/// <summary>
-		/// Rozmiar planszy
-		/// </summary>
-		public int Size { get; private set; }
+	    /// <summary>
+	    /// Funkcja generujaca odwolania do kolejnych pol na mapie zaczynajac od prawego dolnego rogu
+	    /// </summary>
+	    /// <returns>Iterator po polach na mapie</returns>
+	    public IEnumerable<MapField> Reverse() {
+	        for ( int i = Size - 1 ; i >= 0 ; --i ) {
+	            for ( int j = Size - 1 ; j >= 0 ; --j ) { yield return this[i, j]; }
+	        }
+	    }
 
-		public event EventHandler<UpdateEventArgs> UpdateTime;
+        #endregion Iterators
 
+        #region Properities
 
-		private static Random r = new Random();
-		private readonly List<List<MapField>> Grid;
-		private Vector2f? prevMousePos;
+        /// <summary>
+        /// Mozliwosc dostania sie do odpowiedniego pola na planszy
+        /// </summary>
+        /// <param name="i">Pierwsza wspolrzedna</param>
+        /// <param name="j">Druga wspolrzedna</param>
+        /// <returns>Pole o zadanych wspolrzednych</returns>
+        public MapField this[int i, int j] {
+            get { return Grid[i][j]; }
+            private set { Grid[i][j] = value; }
+        }
 
+        /// <summary>
+        /// Rozmiar planszy
+        /// </summary>
+        public int Size { get; private set; }
 
-		private static int count = 0;
-		private static Mutex mutex = new Mutex();
+        #endregion Properities
 
-		private class MapIterator : IEnumerator<MapField> {
-			public MapIterator(List<List<MapField>> parent) {
-				parent_ = parent;
-			}
+        #region PrivateVars
 
-			public MapField Current => parent_[x][y];
+        private static Random rand = new Random();
+        private readonly List<List<MapField>> Grid;
+        private Vector2f? prevMousePos;
 
-			object IEnumerator.Current => Current;
-
-			public void Dispose() { }
-
-			public bool MoveNext() {
-				if ( (x >= parent_.Count - 1) && (y >= parent_[x].Count - 1) ) return false;
-				++y;
-				if ( y == parent_[x].Count ) {
-					y = 0;
-					++x;
-				}
-				return true;
-			}
-		
-			public void Reset() {
-				x = 0;
-				y = -1;
-			}
-
-			private readonly List<List<MapField>> parent_;
-			private int x, y = -1;
-		}
-	}
+        #endregion PrivateVars
+    }
 }

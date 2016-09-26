@@ -29,9 +29,7 @@ namespace PracaInzynierska.Beeing.Men {
 		protected override void UpdateTime(object sender, UpdateEventArgs e) {
 			base.UpdateTime(sender, e);
 
-			if ( IsSelected ) {
-				
-			}
+			if ( IsSelected ) { }
 		}
 	}
 }

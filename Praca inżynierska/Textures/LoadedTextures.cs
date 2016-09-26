@@ -16,6 +16,7 @@ namespace PracaInzynierska.Textures {
 			GrassTexture = GenerateMapTexture(size, new Color(0, 200, 0));
 			SandTexture = GenerateMapTexture(size, new Color(200, 200, 0));
 			RockTexture = GenerateMapTexture(size, new Color(127, 127, 127));
+			SelectedTexture = GenerateMapTexture(size, new Color(255, 255, 255));
 
 			DwarfTexture = GenerateDwarfTexture(size, Color.Cyan);
 			DwarfTextureSelected = GenerateDwarfTexture(size, Color.Magenta);
@@ -57,7 +58,7 @@ namespace PracaInzynierska.Textures {
 		public static Texture RockTexture;
 		public static Texture DwarfTexture;
 		public static Texture DwarfTextureSelected;
-
+		public static Texture SelectedTexture;
 	}
 
 	public static class GUITextures {

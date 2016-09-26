@@ -54,7 +54,7 @@ namespace PracaInzynierska.Beeing {
 			set { MouseButtonReleased += value; }
 		}
 
-		public void Window_MouseButtonReleased(object sender, MouseButtonEventArgs e) {
+        public virtual void Window_MouseButtonReleased(object sender, MouseButtonEventArgs e) {
 			if ( InsideElement(e.X, e.Y) ) {
 				EventHandler<MouseButtonEventArgs> handler = MouseButtonReleased;
 				handler?.Invoke(sender, e);

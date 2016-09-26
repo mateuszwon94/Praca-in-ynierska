@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -18,19 +19,20 @@ using SFML.System;
 using SFML.Window;
 using static System.Console;
 using PracaInzynierska.Textures;
+using PracaInzynierska.Exceptions;
 using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
 
 namespace PracaInzynierska {
 	public static class Program {
 		public static void Main(string[] args) {
-			//Initialising window
-			window = new RenderWindow(new VideoMode(1280, 720), "Praca inzynierska");
+            
+            //Inicjalizacja okna
+            window = new RenderWindow(new VideoMode(1280, 720), "Praca inzynierska");
 			window.Closed += (o, e) => window.Close(); 
 			window.KeyPressed += (o, e) => { if ( e.Code == Keyboard.Key.Escape ) window.Close(); };
 			origWindowSize = window.Size;
 			
-			font = new Font("times.ttf");
 			DisplayTitle();
 
 			WriteLine("Title displayed!");
@@ -42,7 +44,6 @@ namespace PracaInzynierska {
 			WriteLine("Map created!");
 			
 			window.MouseMoved += map.Map_MouseMoved;
-			window.Resized += map.Map_Resized;
 			window.MouseWheelScrolled += map.Map_MouseWheelScrolled;
 
 			IEnumerable<MenBase> colonists = new List<MenBase> {
@@ -65,15 +66,47 @@ namespace PracaInzynierska {
 										   CharacterSize = 20,
 										   Color = Color.Black
 									   },
-						  Position = new Vector2f(20, 20),
+						  Position = new Vector2f(20, window.Size.Y - 60),
 						  MouseButtonPressedHandler = (s, e) => { if (Mouse.IsButtonPressed(Mouse.Button.Left)) window.Close(); }
 					  }
 				  };
 
 			time.Start();
 
-			//Główna petla gry
-			while ( window.IsOpen ) {
+            //tymczasowe sprawdzenie wyznaczanie sciezki
+		    IList<MapField> path = null;
+		    MapField start = null,
+		             stop  = null;
+
+            //Wyszukanie pierwszego dostepnego pola
+            foreach ( MapField field in map ) {
+                if ( field.IsAvaliable ) {
+                    start = field;
+                    break;
+                }
+            }
+
+            //wyszukanie ostatniego dostepnego pola
+            foreach ( MapField field in map.Reverse() ) {
+                if ( field.IsAvaliable ) {
+                    stop = field;
+                    break;
+                }
+            }
+
+            try { //próba wyznaczenia sciezki miedzy wyznaczonymi polami
+                path = Utils.PathFinding.AStar(start, stop, Utils.PathFinding.Metric.ManhattanDistance);
+			} catch ( FieldNotAvaliableException ) {
+				WriteLine($"Field [{start.MapPosition.X}, {start.MapPosition.Y}] is avaliable = {start.IsAvaliable}");
+                WriteLine($"Field [{stop.MapPosition.X}, {stop.MapPosition.Y}] is avaliable = {stop.IsAvaliable}");
+                WriteLine("But path between this field dose not exists!");
+                ReadLine();
+				return;
+			}
+
+
+            //Główna petla gry
+            while ( window.IsOpen ) {
 				window.DispatchEvents();
 				window.Clear();
 
@@ -84,7 +117,18 @@ namespace PracaInzynierska {
 				time.Restart();
 
 				window.Draw(map);
-				foreach ( var colonist in colonists ) {
+
+                if ( path != null ) {
+                    foreach ( MapField field in path ) {
+                        //narysowanie tymczasowej sciezki
+                        Sprite val = new Sprite(SelectedTexture) {
+                                         Position = field.ScreenPosition
+                                     };
+                        window.Draw(val);
+                    }
+                }
+                
+                foreach ( var colonist in colonists ) {
 					window.Draw(colonist);
 				}
 				window.Draw(gui);
@@ -144,17 +188,19 @@ namespace PracaInzynierska {
 			Text topic1 = new Text("Sztuczna inteligencja w grach komputerowych", font, 35) {
 							  Color = Color.White
 						  };
+			topic1.Origin = new Vector2f(topic1.GetGlobalBounds().Width / 2, topic1.GetGlobalBounds().Height / 2);
+			topic1.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 - 45);
+
 			Text topic2 = new Text("na przykładzie logiki rozmytej, algorytmu stada", font, 35) {
 							  Color = Color.White
 						  };
+			topic2.Origin = new Vector2f(topic2.GetGlobalBounds().Width / 2, topic2.GetGlobalBounds().Height / 2);
+			topic2.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 - 10);
+
 			Text topic3 = new Text("i problemu najkrótszej ścieżki w grze 2D.", font, 35) {
 							  Color = Color.White
 						  };
-			topic1.Origin = new Vector2f(topic1.GetGlobalBounds().Width / 2, topic1.GetGlobalBounds().Height / 2);
-			topic2.Origin = new Vector2f(topic2.GetGlobalBounds().Width / 2, topic2.GetGlobalBounds().Height / 2);
 			topic3.Origin = new Vector2f(topic3.GetGlobalBounds().Width / 2, topic3.GetGlobalBounds().Height / 2);
-			topic1.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 - 45);
-			topic2.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 - 10);
 			topic3.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 + 25);
 
 			Text prom = new Text("Promotor:", font, 20) {
@@ -220,9 +266,9 @@ namespace PracaInzynierska {
 		/// <summary>
 		/// Podstawowa czcionka
 		/// </summary>
-		internal static Font font { get; private set; }
+		internal static Font font { get; } = new Font("times.ttf");
 
-		internal static RenderWindow window;
+        internal static RenderWindow window;
 		internal static Vector2u origWindowSize;
 		internal static Map.Map map;
 		internal static GUI gui;

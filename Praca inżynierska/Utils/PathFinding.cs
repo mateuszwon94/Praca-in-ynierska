@@ -7,25 +7,32 @@ using static PracaInzynierska.Utils.PathFinding.Metric;
 
 namespace PracaInzynierska.Utils {
 	public static partial class PathFinding {
+        /// <summary>
+        /// Algorytm A* znajdowania najkrotszej sciezki na planszy.
+        /// </summary>
+        /// <param name="from">Pole startowe</param>
+        /// <param name="to">Pole, ktore chcemy osiagnac</param>
+        /// <param name="heuristic">Metryka w jakiej maja byc szacowana odleglosc do pola docelowego</param>
+        /// <returns>Lista pol skladajaca sie na sciezke</returns>
 		public static IList<MapField> AStar(MapField from, MapField to, HeuristicFunc heuristic) {
+		    if ( (from == null) || (to == null) ) throw new NullReferenceException();
 			if ( !to.IsAvaliable ) throw new FieldNotAvaliableException();
 
+            //Lita pol do przeszukania
 			List<PathFindingNode> openList = new List<PathFindingNode> {
 												 new PathFindingNode(from, null, 0, heuristic(from, to))
 											 };
-
+            //Lista przeszukanych pol
 			List<PathFindingNode> closeList = new List<PathFindingNode>();
 
 			while ( openList.Count != 0 ) {
 				PathFindingNode current = openList.RemoveAndGet(0);
 
-				if ( current.This == to ) {
-					return ReconstructPath(current);
-				}
+			    if ( current.This == to ) { return ReconstructPath(current); }
 
-				closeList.Add(current);
+			    closeList.Add(current);
 				foreach ( MapField neighbour in current.This.Neighbour ) {
-					if ( !neighbour.IsAvaliable ) continue;
+					if ( !neighbour.IsAvaliable || closeList.Contains(neighbour)) continue;
 
 					PathFindingNode neighbourNode = new PathFindingNode(neighbour, current,
 																		current.CostFromStart + EuclideanDistance(current.This, neighbour), 
@@ -33,6 +40,7 @@ namespace PracaInzynierska.Utils {
 
 					PathFindingNode oldNode = openList.FirstOrDefault(node => node == neighbourNode);
 
+                    //Zmiana parametrow sciezki jesli droga do sasiada jest krotsza z obecnego pola niz ustalona wczesniej
 					if ( (oldNode != null) && (neighbourNode.CostFromStart < oldNode.CostFromStart) ) {
 						oldNode.CostFromStart = neighbourNode.CostFromStart;
 						oldNode.CostToEnd = neighbourNode.CostToEnd;
@@ -61,9 +69,9 @@ namespace PracaInzynierska.Utils {
 		}
 
 		private class PathFindingNode : IComparable<PathFindingNode> {
-			internal PathFindingNode(MapField This, PathFindingNode parrent, double costFromStart, double costToEnd) {
+			internal PathFindingNode(MapField This, PathFindingNode Parent, float costFromStart, float costToEnd) {
 				this.This = This;
-				Parent = parrent;
+				this.Parent = Parent;
 
 				CostFromStart = costFromStart;
 				CostToEnd = costToEnd;
@@ -72,15 +80,15 @@ namespace PracaInzynierska.Utils {
 			public MapField This { get; }
 			public PathFindingNode Parent { get; set; }
 
-			public double CostFromStart { get; set; }
-			public double CostToEnd { get; set; }
+			public float CostFromStart { get; set; }
+			public float CostToEnd { get; set; }
 
-			public double AllCost => CostFromStart + CostToEnd;
+			public float AllCost => CostFromStart + CostToEnd;
 
 			public static bool operator ==(PathFindingNode one, PathFindingNode two) => one?.This == two?.This;
 			public static bool operator !=(PathFindingNode one, PathFindingNode two) => !(one == two);
 
-			public static bool operator <(PathFindingNode one, PathFindingNode two) => one.AllCost < two.AllCost;
+            public static bool operator <(PathFindingNode one, PathFindingNode two) => one.AllCost < two.AllCost;
 			public static bool operator >(PathFindingNode one, PathFindingNode two) => one.AllCost > two.AllCost;
 
 
@@ -117,5 +125,9 @@ namespace PracaInzynierska.Utils {
 				return value;
 			}
 		}
-	}
+
+        private static bool Contains(this IEnumerable<PathFindingNode> list, MapField field) {
+            return list.Any(val => val == new PathFindingNode(field, null, 0, 0));
+        }
+    }
 }
