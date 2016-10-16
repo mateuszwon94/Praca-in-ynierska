@@ -119,7 +119,7 @@ namespace PracaInzynierska {
 			WriteLine("Sstart and end point found!");
 
 			try { //próba wyznaczenia sciezki miedzy wyznaczonymi polami
-                path = PathFinding.AStar(stop, start, PathFinding.Metric.ManhattanDistance);
+                path = PathFinding.AStar(start, stop, PathFinding.Metric.EuclideanDistance);
 			} catch ( FieldNotAvaliableException ) {
 				WriteLine($"Field [{start.MapPosition.X}, {start.MapPosition.Y}] is avaliable = {start.IsAvaliable}");
                 WriteLine($"Field [{stop.MapPosition.X}, {stop.MapPosition.Y}] is avaliable = {stop.IsAvaliable}");

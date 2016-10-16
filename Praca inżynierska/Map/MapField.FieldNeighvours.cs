@@ -48,7 +48,7 @@ namespace PracaInzynierska.Map {
             #region Iterators
 
             /// <summary>
-            /// Funkcja generujaca odwolania do kolejnych istniejacych sasiadow poczawszy od [-1, -1]
+            /// Funkcja generujaca odwolania do kolejnych najbliższych istniejacych sasiadow poczawszy od [-1, -1]
             /// </summary>
             /// <returns>Iterator po sasiadach</returns>
             public IEnumerator<MapField> GetEnumerator() {

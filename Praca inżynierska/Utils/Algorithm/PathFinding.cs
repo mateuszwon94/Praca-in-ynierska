@@ -68,12 +68,13 @@ namespace PracaInzynierska.Utils.Algorithm {
 		private static IList<MapField> ReconstructPath(PathFindingNode node) {
 			List<MapField> path = new List<MapField>();
 
-			do {
-				path.Add(node.This);
-				node = node.Parent;
-			} while ( node.Parent == null );
+		    while ( true ) {
+		        path.Add(node.This);
+		        if ( node.Parent == null ) break;
+                node = node.Parent;
+		    }
 
-			path.Reverse();
+		    path.Reverse();
 			return path;
 		}
 
