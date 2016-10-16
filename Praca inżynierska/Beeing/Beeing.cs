@@ -10,28 +10,33 @@ using SFML.Window;
 using PracaInzynierska.Events;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Map;
+using static System.Math;
 
 namespace PracaInzynierska.Beeing {
 	public abstract class Beeing : Drawable {
 
-		public Beeing(Window window, Map.Map map) {
-			AddEvents(window);
-			map.UpdateTime += UpdateTime;
-
-			MouseButtonReleased += (o, e) => {
-							   if ( IsSelected ) IsSelected = false;
-							   else IsSelected = true;
-						   };
-		}
-
-		protected virtual void UpdateTime(object sender, UpdateEventArgs e) {
-			
-		}
+		public abstract void UpdateTime(object sender, UpdateEventArgs e);
 
 		#region Events
+
+		/// <summary>
+		/// Event wywoływany przy nacisnieciu klawisza
+		/// </summary>
 		public event EventHandler<KeyEventArgs> KeyPressed;
+
+		/// <summary>
+		/// Event wywolywaniu przy puzczeniu klawisza.
+		/// </summary>
 		public event EventHandler<KeyEventArgs> KeyReleased;
+
+		/// <summary>
+		/// Event wywolywanu przy nacisniecku klawisa myszy.
+		/// </summary>
 		public event EventHandler<MouseButtonEventArgs> MouseButtonPressed;
+
+		/// <summary>
+		/// Event wywolywany przy pusszczeniu klawisza myszy.
+		/// </summary>
 		public event EventHandler<MouseButtonEventArgs> MouseButtonReleased;
 
 		public EventHandler<KeyEventArgs> KeyPressedHandler {
@@ -77,42 +82,31 @@ namespace PracaInzynierska.Beeing {
 			EventHandler<KeyEventArgs> handler = KeyPressed;
 			handler?.Invoke(sender, e);
 		}
-
-		private void AddEvents(Window window) {
-			window.KeyPressed += Window_KeyPressed;
-			window.KeyReleased += Window_KeyReleased;
-			window.MouseButtonPressed += Window_MouseButtonPressed;
-			window.MouseButtonReleased += Window_MouseButtonReleased;
-		} 
+		
 		#endregion Events
 
+		/// <summary>
+		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
+		/// </summary>
+		/// <param name="x">Pozycja X na ekranie</param>
+		/// <param name="y">Pozycja Y na ekranie</param>
+		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public virtual bool InsideElement(int x, int y) {
-			return (Position.X <= x) && (x < Position.X + Size.X) && (Position.Y <= y) && (y < Position.Y + Size.Y);
+			return (ScreenPosition.X <= x) && (x < ScreenPosition.X + Size.X) && (ScreenPosition.Y <= y) && (y < ScreenPosition.Y + Size.Y);
 		}
 
+		/// <summary>
+		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
+		/// </summary>
+		/// <param name="poition">Kordynaty na ekranie</param>
+		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public virtual bool InsideElement(Vector2i poition) {
-			return (Position.X <= poition.X) && (poition.X < Position.X + Size.X) && (Position.Y <= poition.Y) && (poition.Y < Position.Y + Size.Y);
+			return (ScreenPosition.X <= poition.X) && (poition.X < ScreenPosition.X + Size.X) && (ScreenPosition.Y <= poition.Y) && (poition.Y < ScreenPosition.Y + Size.Y);
 		}
 
-		public Sprite Texture => IsSelected ? TextureSelected : TextureNotSelected;
-
-		public Sprite TextureSelected {
-			get { return textureSelected_; }
-			set {
-				textureSelected_ = value;
-				TransformTexture(textureSelected_);
-			}
-		}
-
-		public Sprite TextureNotSelected {
-			get { return textureNotSelected_; }
-			set {
-				textureNotSelected_ = value;
-				TransformTexture(textureNotSelected_);
-			}
-		}
-
-		private void TransformTexture(Sprite tex) {
+		public abstract Sprite Texture { get; set; } 
+		
+		protected virtual void TransformTexture(Sprite tex) {
 			tex.Origin = new Vector2f(tex.Texture.Size.X / 2f, tex.Texture.Size.Y / 2f);
 			tex.Position = Location.Center;
 		}
@@ -124,29 +118,32 @@ namespace PracaInzynierska.Beeing {
 		public MapField Location {
 			get { return mapField_; }
 			set {
-				mapField_ = value;
-				try { mapField_.UnitOn = this; }
-				catch ( FieldIsNotEmptyException ex ) {
-					mapField_ = null;
-					throw ex;
+				if ( value.IsUnitOn ) { throw new FieldIsNotEmptyException(); }
+				else {
+					mapField_ = value;
+					mapField_.UnitOn = this;
 				}
 			}
 		}
 		
-		public Vector2f Position {
-			get { return Texture.Position; }
-			set {
-				TextureNotSelected.Position = value;
-				TextureSelected.Position = value;
-			}
-		}
+		public abstract Vector2f ScreenPosition { get; set; }
+
+		public Vector2i MapPosition => mapField_.MapPosition;
 
 		public Vector2u Size => Texture.Texture.Size;
 
 		private MapField mapField_;
-		private Sprite textureSelected_;
-		private Sprite textureNotSelected_;
 
-		public abstract void Draw(RenderTarget target, RenderStates states);
+		public virtual void Draw(RenderTarget target, RenderStates states) {
+			if ( (Texture.Position.X >= -Texture.Texture.Size.X) &&
+				 (Texture.Position.X <= Program.window.Size.X) &&
+				 (Texture.Position.Y >= -Texture.Texture.Size.Y) &&
+				 (Texture.Position.Y <= Program.window.Size.Y) ) { target.Draw(Texture, states); }
+		}
+
+		public static float Distance(Beeing from, Beeing to) {
+			return (float) Round(Sqrt((from.MapPosition.X - to.MapPosition.X) * (from.MapPosition.X - to.MapPosition.X) +
+				   					  (from.MapPosition.Y - to.MapPosition.Y) * (from.MapPosition.Y - to.MapPosition.Y)), 4);
+		}
 	}
 }

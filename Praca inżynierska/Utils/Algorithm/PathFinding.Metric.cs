@@ -1,8 +1,7 @@
-﻿using System;
-using PracaInzynierska.Map;
+﻿using PracaInzynierska.Map;
 using static System.Math;
 
-namespace PracaInzynierska.Utils {
+namespace PracaInzynierska.Utils.Algorithm {
 	public static partial class PathFinding {
 		public static class Metric {
 			public delegate float HeuristicFunc(MapField from, MapField to);
@@ -14,8 +13,9 @@ namespace PracaInzynierska.Utils {
             /// <param name="to">Drugie Pole</param>
             /// <returns>Odleglosc miedzy polami</returns>
 			public static float EuclideanDistance(MapField from, MapField to) {
-                return (float)Round(Sqrt(Pow(from.MapPosition.X - to.MapPosition.X, 2) + Pow(from.MapPosition.Y - to.MapPosition.Y, 2)), 4);
-			}
+	            return (float)Round(Sqrt((from.MapPosition.X - to.MapPosition.X) * (from.MapPosition.X - to.MapPosition.X) +
+									     (from.MapPosition.Y - to.MapPosition.Y) * (from.MapPosition.Y - to.MapPosition.Y)), 4);
+            }
 
             /// <summary>
             /// Odleglosc w metryce Manhatan miedzy dwoma polami mapy.

@@ -54,7 +54,7 @@ namespace PracaInzynierska.Map {
 						double minDist = double.MaxValue;
 						MapSeed.Value seedValue = MapSeed.Value.None;
 
-						foreach ( var pos in posList ) {
+						foreach ( Vector2i pos in posList ) {
 							double dist = Math.Pow(pos.X - i, 2) + Math.Pow(pos.Y - j, 2);
 							if ( dist < minDist ) {
 								minDist = dist;
@@ -114,9 +114,9 @@ namespace PracaInzynierska.Map {
         #region Drawable
 
         /// <summary>
-        /// Funkcja rysujaca teksture
+        /// Funkcja rysujaca mape
         /// </summary>
-        /// <param name="target">Cel na ktorym jest rysowana</param>
+        /// <param name="target">Cel, na ktorym jest rysowana</param>
         /// <param name="states">Stan</param>
         public void Draw(RenderTarget target, RenderStates states) {
             for ( int i = 0 ; i < Size ; ++i ) {

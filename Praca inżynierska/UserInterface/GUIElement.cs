@@ -10,8 +10,19 @@ using SFML.Window;
 using PracaInzynierska;
 
 namespace PracaInzynierska.UserInterface {
+
+	/// <summary>
+	/// Klasa abstrakcyjna po ktorej dziedzicza wszystkie obiekty GUI
+	/// </summary>
 	public abstract class GUIElement : Drawable {
-		
+
+		#region Drawable
+
+		/// <summary>
+		/// Funkcja rysujaca element
+		/// </summary>
+		/// <param name="target">Cel, na ktorym jest rysowany</param>
+		/// <param name="states">Stan</param>
 		public void Draw(RenderTarget target, RenderStates states) {
 			if ( IsActive ) {
 				OnDraw(target, states);
@@ -20,28 +31,88 @@ namespace PracaInzynierska.UserInterface {
 
 		protected abstract void OnDraw(RenderTarget target, RenderStates states);
 
+		#endregion
+
+		#region Func
+
+		/// <summary>
+		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
+		/// </summary>
+		/// <param name="x">Pozycja X na ekranie</param>
+		/// <param name="y">Pozycja Y na ekranie</param>
+		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public bool InsideElement(int x, int y) {
 			return (Position.X <= x) && (x < Position.X + Size.X) && (Position.Y <= y) && (y < Position.Y + Size.Y);
 		}
 
+		/// <summary>
+		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
+		/// </summary>
+		/// <param name="poition">Kordynaty na ekranie</param>
+		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public bool InsideElement(Vector2i poition) {
 			return (Position.X <= poition.X) && (poition.X < Position.X + Size.X) && (Position.Y <= poition.Y) && (poition.Y < Position.Y + Size.Y);
 		}
 
+		#endregion
+
+		#region Properities
+
+		/// <summary>
+		/// Nazwa elementu
+		/// </summary>
 		public string Name { get; set; }
-		
+
+		/// <summary>
+		/// Pozycja na ekranie
+		/// </summary>
 		public abstract Vector2f Position { get; set; }
 
+		/// <summary>
+		/// Rozmiar elementu
+		/// </summary>
 		public abstract Vector2u Size { get; }
 
+		/// <summary>
+		/// Czy element jest aktywny
+		/// </summary>
 		public bool IsActive { get; set; }
-		
+
+		#endregion
+
+		#region Events
+
+		/// <summary>
+		/// Event wywoływany przy nacisnieciu klawisza
+		/// </summary>
 		public event EventHandler<KeyEventArgs> KeyPressed;
+
+		/// <summary>
+		/// Event wywolywaniu przy puzczeniu klawisza.
+		/// </summary>
 		public event EventHandler<KeyEventArgs> KeyReleased;
+
+		/// <summary>
+		/// Event wywolywanu przy nacisniecku klawisa myszy.
+		/// </summary>
 		public event EventHandler<MouseButtonEventArgs> MouseButtonPressed;
+
+		/// <summary>
+		/// Event wywolywany przy pusszczeniu klawisza myszy.
+		/// </summary>
 		public event EventHandler<MouseButtonEventArgs> MouseButtonReleased;
+
+		/// <summary>
+		/// Event wywołyany przy przesunieciu mysza.
+		/// </summary>
 		public event EventHandler<MouseMoveEventArgs> MouseMoved;
+
+		/// <summary>
+		/// Event wywolywany przy przekreceniu scrollem.
+		/// </summary>
 		public event EventHandler<MouseWheelScrollEventArgs> MouseWheelScrolled;
+
+		#endregion Events
 
 		#region EventHandlers
 

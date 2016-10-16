@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PracaInzynierska</RootNamespace>
     <AssemblyName>PracaInzynierska</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NuGetPackageImportStamp>
@@ -74,6 +74,9 @@
     <Optimize>false</Optimize>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="AForge, Version=2.2.5.0, Culture=neutral, PublicKeyToken=c1db6ff4eaa06aeb, processorArchitecture=MSIL">
       <HintPath>..\packages\AForge.2.2.5\lib\AForge.dll</HintPath>
@@ -101,6 +104,10 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.0.0-rc3-24212-01\lib\netstandard1.1\System.ValueTuple.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -109,10 +116,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Beeing\Animal.cs" />
     <Compile Include="Beeing\Beeing.cs" />
-    <Compile Include="Beeing\MenBase.cs" />
-    <Compile Include="Beeing\Men\Dwarf.cs" />
-    <Compile Include="Events\EventItem.cs" />
+    <Compile Include="Beeing\Men.cs" />
     <Compile Include="Events\MapMovedEventArgs.cs" />
     <Compile Include="Events\MapResizedEventArgs.cs" />
     <Compile Include="Exceptions\NoSouchNeighbourException.cs" />
@@ -131,14 +137,14 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Textures\LoadedTextures.cs" />
-    <Compile Include="Beeing\Men\Human.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Events\UpdateEventArgs.cs" />
     <Compile Include="Exceptions\FieldNotAvaliableException.cs" />
+    <Compile Include="Utils\Algorithm\Herd.cs" />
     <Compile Include="Utils\Math\Math.cs" />
-    <Compile Include="Utils\PathFinding.cs" />
-    <Compile Include="Utils\PathFinding.Metric.cs" />
+    <Compile Include="Utils\Algorithm\PathFinding.cs" />
+    <Compile Include="Utils\Algorithm\PathFinding.Metric.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -198,9 +204,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Beeing\Animal\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
       <Visible>False</Visible>

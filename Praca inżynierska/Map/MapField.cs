@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using PracaInzynierska.Beeing;
 using PracaInzynierska.Events;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Textures;
@@ -106,15 +107,15 @@ namespace PracaInzynierska.Map {
 
                 switch ( fieldSeed_ ) { //przypisanie odopwiedniej tekstury i predkosci poruszania sie w zaleznosci od terenu
                     case MapSeed.Value.Sand:
-                        FieldTexture = (MapTextures.SandTexture);
+                        FieldTexture = MapTextures.SandTexture;
                         MoveSpeed = 0.7;
                         break;
                     case MapSeed.Value.Grass:
-                        FieldTexture = (MapTextures.GrassTexture);
+                        FieldTexture = MapTextures.GrassTexture;
                         MoveSpeed = 0.9;
                         break;
                     case MapSeed.Value.Rock:
-                        FieldTexture = (MapTextures.RockTexture);
+                        FieldTexture = MapTextures.RockTexture;
                         MoveSpeed = 0.0;
                         break;
                     default:
@@ -175,6 +176,12 @@ namespace PracaInzynierska.Map {
         /// <param name="e">Argumenty z jakimi otrzymano event</param>
         internal void MapResized(object sender, MapResizedEventArgs e) {
             FieldSeed = FieldSeed;
+	        if (UnitOn is Animal a) {
+				a.Texture = new Sprite(MapTextures.AnimalTexture);
+	        } else if (UnitOn is Men m) {
+				m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
+				m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
+	        }
         }
 
         /// <summary>
@@ -185,7 +192,7 @@ namespace PracaInzynierska.Map {
 		internal void MapMoved(object sender, MapMovedEventArgs e) {
             ScreenPosition = new Vector2f(ScreenPosition.X + (float)e.dx, ScreenPosition.Y + (float)e.dy);
 
-            if ( IsUnitOn ) UnitOn.Position = Center;
+            if ( IsUnitOn ) UnitOn.ScreenPosition = Center;
         }
 
         #endregion EventHandlers

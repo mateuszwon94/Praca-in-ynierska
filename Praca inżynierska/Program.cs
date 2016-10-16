@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using PracaInzynierska.Beeing;
-using PracaInzynierska.Beeing.Men;
 using PracaInzynierska.Map;
 using PracaInzynierska.UserInterface;
 using PracaInzynierska.UserInterface.Controls;
@@ -20,19 +19,23 @@ using SFML.Window;
 using static System.Console;
 using PracaInzynierska.Textures;
 using PracaInzynierska.Exceptions;
+using PracaInzynierska.Utils.Algorithm;
+using static PracaInzynierska.Beeing.Men;
 using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
 
 namespace PracaInzynierska {
 	public static class Program {
 		public static void Main(string[] args) {
-            
-            //Inicjalizacja okna
-            window = new RenderWindow(new VideoMode(1280, 720), "Praca inzynierska");
-			window.Closed += (o, e) => window.Close(); 
-			window.KeyPressed += (o, e) => { if ( e.Code == Keyboard.Key.Escape ) window.Close(); };
+
+			//Inicjalizacja okna
+			window = new RenderWindow(new VideoMode(1280, 720), "Praca inzynierska");
+			window.Closed += (o, e) => window.Close();
+			window.KeyPressed += (o, e) => {
+									 if ( e.Code == Keyboard.Key.Escape ) window.Close();
+								 };
 			origWindowSize = window.Size;
-			
+
 			DisplayTitle();
 
 			WriteLine("Title displayed!");
@@ -41,23 +44,35 @@ namespace PracaInzynierska {
 			WriteLine("Start map creating!");
 			const int mapSize = 50;
 			map = new Map.Map(mapSize, new MapSeed((int)(mapSize / 5.0), (int)(mapSize / 10.0), (int)(mapSize / 15.0)));
-			WriteLine("Map created!");
-			
+
 			window.MouseMoved += map.Map_MouseMoved;
 			window.MouseWheelScrolled += map.Map_MouseWheelScrolled;
+			WriteLine("Map created!");
+			
+			WriteLine("Start creating colonist!");
+			List<Men> colonists = new List<Men>() {
+									  new Men() {
+										  MoveSpeed = 1,
+										  Location = map[5, 5],
+										  TextureSelected = new Sprite(MenTextureSelected),
+										  TextureNotSelected = new Sprite(MenTexture),
+										  IsSelected = false
+									  }
+								  };
+		
 
-			IEnumerable<MenBase> colonists = new List<MenBase> {
-												 new Dwarf(window, map) {
-													 MoveSpeed = 1,
-													 Location = map[5, 5],
-													 TextureSelected = new Sprite(DwarfTextureSelected),
-													 TextureNotSelected = new Sprite(DwarfTexture),
-													 IsSelected = false,
-												 }
-											 };
+			foreach ( Men colonist in colonists ) {
+				map.UpdateTime += colonist.UpdateTime;
+				window.KeyPressed += colonist.Window_KeyPressed;
+				window.KeyReleased += colonist.Window_KeyReleased;
+				window.MouseButtonPressed += colonist.Window_MouseButtonPressed;
+				window.MouseButtonReleased += colonist.Window_MouseButtonReleased;
+			}
+			WriteLine("Colonist created!");
 
+			WriteLine("Start creating GUI!");
 			//Tworzenie GUI
-			gui = new GUI(window) {
+			gui = new GUI() {
 					  new Button {
 						  Name = "First Button",
 						  IsActive = true,
@@ -71,10 +86,18 @@ namespace PracaInzynierska {
 					  }
 				  };
 
-			time.Start();
+			window.KeyPressed += gui.Window_KeyPressed;
+			window.KeyReleased += gui.Window_KeyReleased;
+			window.MouseButtonPressed += gui.Window_MouseButtonPressed;
+			window.MouseButtonReleased += gui.Window_MouseButtonReleased;
+			window.MouseMoved += gui.Window_MouseMoved;
+			window.MouseWheelScrolled += gui.Window_MouseWheelScrolled;
+			WriteLine("GUI created!");
 
-            //tymczasowe sprawdzenie wyznaczanie sciezki
-		    IList<MapField> path = null;
+			WriteLine("Start creating path!");
+			WriteLine("Searching for start and end point!");
+			//tymczasowe sprawdzenie wyznaczanie sciezki
+			IList<MapField> path;
 		    MapField start = null,
 		             stop  = null;
 
@@ -92,10 +115,11 @@ namespace PracaInzynierska {
                     stop = field;
                     break;
                 }
-            }
+			}
+			WriteLine("Sstart and end point found!");
 
-            try { //próba wyznaczenia sciezki miedzy wyznaczonymi polami
-                path = Utils.PathFinding.AStar(start, stop, Utils.PathFinding.Metric.ManhattanDistance);
+			try { //próba wyznaczenia sciezki miedzy wyznaczonymi polami
+                path = PathFinding.AStar(stop, start, PathFinding.Metric.ManhattanDistance);
 			} catch ( FieldNotAvaliableException ) {
 				WriteLine($"Field [{start.MapPosition.X}, {start.MapPosition.Y}] is avaliable = {start.IsAvaliable}");
                 WriteLine($"Field [{stop.MapPosition.X}, {stop.MapPosition.Y}] is avaliable = {stop.IsAvaliable}");
@@ -103,7 +127,19 @@ namespace PracaInzynierska {
                 ReadLine();
 				return;
 			}
+			WriteLine("Path created!");
 
+			WriteLine("Start creating herd!");
+			MapField mapField;
+			do {
+				int x = rand.Next(map.Size);
+				int y = rand.Next(map.Size);
+				mapField = map[x, y];
+			} while ( !mapField.IsAvaliable );
+			Herd herd = new Herd(mapField, 5);
+			WriteLine("Herd created!");
+
+			time.Start();
 
             //Główna petla gry
             while ( window.IsOpen ) {
@@ -131,6 +167,8 @@ namespace PracaInzynierska {
                 foreach ( var colonist in colonists ) {
 					window.Draw(colonist);
 				}
+				window.Draw(herd);
+	            
 				window.Draw(gui);
 
 				window.Display();
@@ -272,6 +310,8 @@ namespace PracaInzynierska {
 		internal static Vector2u origWindowSize;
 		internal static Map.Map map;
 		internal static GUI gui;
+
+		public static Random rand = new Random();
 
 		//Zmienne do odmierzania czasu, ktory uplynal
 		private static readonly Stopwatch time = new Stopwatch();

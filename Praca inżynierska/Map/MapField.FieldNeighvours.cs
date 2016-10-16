@@ -35,8 +35,6 @@ namespace PracaInzynierska.Map {
             /// <returns>Pole sasiada.</returns>
             public MapField this[int x, int y] {
                 get {
-                    if ( ((x < -1) || (x > 1)) || ((y < -1) || (y > 1)) ) { throw new NoSouchNeighbourException(); }
-
                     try {
                         return parent_.map_[parent_.MapPosition.X + x, parent_.MapPosition.Y + y];
                     } catch {
@@ -54,17 +52,18 @@ namespace PracaInzynierska.Map {
             /// </summary>
             /// <returns>Iterator po sasiadach</returns>
             public IEnumerator<MapField> GetEnumerator() {
-                for ( sbyte x = -1 ; x <= 1 ; ++x ) {
+	            for ( sbyte x = -1 ; x <= 1 ; ++x ) {
                     for ( sbyte y = -1 ; y <= 1 ; ++y ) {
-                        try {
-                            MapField mf = this[x, y];
+                        if ( (x == 0) && (y == 0) ) continue;
+
+	                    MapField mf;
+	                    try {
+                            mf = this[x, y];
                         } catch ( NoSouchNeighbourException ) {
                             continue;
                         }
 
-                        if ( (x == 0) && (y == 0) ) continue;
-
-                        yield return this[x, y];
+                        yield return mf;
                     }
                 }
             }
