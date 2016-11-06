@@ -10,7 +10,7 @@ using SFML.System;
 using SFML.Window;
 
 namespace PracaInzynierska.Textures {
-	
+
 	/// <summary>
 	/// Klasa odpowiadajaca za generowanie i przechowywanie tekstor zwiazanych z plansza gry.
 	/// </summary>
@@ -26,7 +26,7 @@ namespace PracaInzynierska.Textures {
 			GrassTexture = GenerateMapTexture(size, new Color(0, 200, 0));
 			SandTexture = GenerateMapTexture(size, new Color(200, 200, 0));
 			RockTexture = GenerateMapTexture(size, new Color(127, 127, 127));
-			SelectedTexture = GenerateMapTexture(size, new Color(255, 255, 255));
+			SelectedTexture = GenerateMapTexture(size, new Color(255, 255, 255, 127));
 
 			MenTexture = GenerateBeeingTexture(size, Color.Cyan);
 			MenTextureSelected = GenerateBeeingTexture(size, Color.Magenta);
@@ -41,15 +41,17 @@ namespace PracaInzynierska.Textures {
 		/// <returns>Wygenerowana tekstura</returns>
 		public static Texture GenerateMapTexture(uint size, Color color) {
 			RenderTexture renderTexture = new RenderTexture(size, size);
-			renderTexture.Clear();
-			RectangleShape box = new RectangleShape(new Vector2f(size - 2, size - 2)) {
+			renderTexture.Clear(Color.Transparent);
+			RectangleShape box = new RectangleShape(new Vector2f(size-1, size-1)) {
 									 Position = new Vector2f(1, 1),
-									 FillColor = color
+									 FillColor = color,
+									 OutlineThickness = 1,
+									 OutlineColor = Color.Black,
 								 };
 			renderTexture.Draw(box);
 			return new Texture(renderTexture.Texture) {
-				Smooth = true,
-			};
+					   Smooth = true,
+				   };
 		}
 
 		/// <summary>
@@ -62,15 +64,16 @@ namespace PracaInzynierska.Textures {
 		public static Texture GenerateBeeingTexture(uint size, Color color, uint pointCount = 30) {
 			RenderTexture renderTexture = new RenderTexture(size, size);
 			renderTexture.Clear(Color.Transparent);
-			CircleShape bigger = new CircleShape(size / 2, pointCount) { FillColor = Color.Black };
-			CircleShape circle = new CircleShape((size / 2) - 2, pointCount) {
+			CircleShape circle = new CircleShape((size / 2) -1, pointCount) {
 									 FillColor = color,
-									 Origin = new Vector2f(0, 0),
-									 Position = new Vector2f(2, 2)
+									 Position = new Vector2f(1, 1),
+									 OutlineThickness = 1,
+									 OutlineColor = Color.Black,
 								 };
-			renderTexture.Draw(bigger);
 			renderTexture.Draw(circle);
-			return new Texture(renderTexture.Texture) { Smooth = true };
+			return new Texture(renderTexture.Texture) {
+					   Smooth = true
+				   };
 		}
 
 		#endregion
@@ -141,11 +144,13 @@ namespace PracaInzynierska.Textures {
 		/// <returns>Wygenerowana tekstura</returns>
 		public static Texture ButtonTexture(uint width, uint height, Color color) {
 			RenderTexture renderTexture = new RenderTexture(height, width);
-			renderTexture.Clear();
-			RectangleShape fill = new RectangleShape(new Vector2f(height - 6, width - 6)) {
-				FillColor = color,
-				Position = new Vector2f(3, 3)
-			};
+			renderTexture.Clear(Color.Transparent);
+			RectangleShape fill = new RectangleShape(new Vector2f(height-4, width-4)) {
+									  FillColor = color,
+									  Position = new Vector2f(2, 2),
+									  OutlineThickness = 2,
+									  OutlineColor = Color.Black,
+								  };
 			renderTexture.Draw(fill);
 
 			return new Texture(renderTexture.Texture) {
@@ -160,7 +165,7 @@ namespace PracaInzynierska.Textures {
 		/// <summary>
 		/// Tekstura Zwyklego przycisku
 		/// </summary>
-		public static Texture NormalButtonTexture { get; private set; } 
+		public static Texture NormalButtonTexture { get; private set; }
 
 		#endregion
 

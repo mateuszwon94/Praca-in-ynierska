@@ -10,10 +10,10 @@
 		/// <param name="to">Koncowa wartosc</param>
 		/// <param name="amount">Ilosc podzialow</param>
 		/// <returns>Wartosc liniowej interpolacji.</returns>
-		public static double Lerp(double from, double to, double amount) {
+		public static double Lerp(double from, double to, double amount, bool addFrom = true) {
 			if ( amount < 0 ) amount = 0;
 			else if ( amount > 1 ) amount = 1;
-			return from + (to - from) * amount;
+			return addFrom ? from + (to - from) * amount : (to - from) * amount;
 		}
 	}
 }

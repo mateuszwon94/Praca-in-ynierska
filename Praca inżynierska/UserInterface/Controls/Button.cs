@@ -62,7 +62,7 @@ namespace PracaInzynierska.UserInterface.Controls {
 		protected override void OnDraw(RenderTarget target, RenderStates states) {
 			target.Draw(ButtonTexture);
 			target.Draw(ButtonText);
-		} 
+		}
 		#endregion
 
 	}

@@ -13,16 +13,25 @@ using PracaInzynierska.Map;
 using static System.Math;
 
 namespace PracaInzynierska.Beeing {
-	public class Men : Beeing {
 
+	/// <summary>
+	/// Klasa odpowiadajaca za ludzi
+	/// </summary>
+	public class Men : Beeing {
 		public Men() {
 			MouseButtonReleased += (o, e) => {
 				if ( IsSelected ) IsSelected = false;
 				else IsSelected = true;
 			};
 		}
-		
-        public override bool InsideElement(int x, int y) {
+
+		/// <summary>
+		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
+		/// </summary>
+		/// <param name="x">Pozycja X na ekranie</param>
+		/// <param name="y">Pozycja Y na ekranie</param>
+		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
+		public override bool InsideElement(int x, int y) {
             if ( (Location.ScreenPosition.X <= x) && (x < Location.ScreenPosition.X + Size.X) && (Location.ScreenPosition.Y <= y) && (y < Location.ScreenPosition.Y + Size.Y) ) {
                 Vector2f pos = new Vector2f(x, y) - Location.ScreenPosition;
                 Vector2f center = Location.Center - Location.ScreenPosition;
@@ -32,6 +41,9 @@ namespace PracaInzynierska.Beeing {
             return false;
         }
 
+		/// <summary>
+		/// Tekstura jaka ma być wyświetlana na ekranie
+		/// </summary>
 		public override Sprite Texture {
 			get { return IsSelected ? TextureSelected : TextureNotSelected; }
 			set {
@@ -40,6 +52,9 @@ namespace PracaInzynierska.Beeing {
 			}
 		}
 
+		/// <summary>
+		/// Tekstura zaznaczonego czlowieka
+		/// </summary>
 		public Sprite TextureSelected {
 			get { return textureSelected_; }
 			set {
@@ -48,6 +63,9 @@ namespace PracaInzynierska.Beeing {
 			}
 		}
 
+		/// <summary>
+		/// tekstura niezaznaczonego czlowieka
+		/// </summary>
 		public Sprite TextureNotSelected {
 			get { return textureNotSelected_; }
 			set {
@@ -56,6 +74,9 @@ namespace PracaInzynierska.Beeing {
 			}
 		}
 
+		/// <summary>
+		/// Zwraca pozucje na ekranie danego stworzenia
+		/// </summary>
 		public override Vector2f ScreenPosition {
 			get { return Texture.Position; }
 			set {
@@ -64,6 +85,11 @@ namespace PracaInzynierska.Beeing {
 			}
 		}
 
+		/// <summary>
+		/// Funkcja wywoływana przy kazdym odswierzeniu okranu
+		/// </summary>
+		/// <param name="sender">Obiekt wysylajacy zdazenie</param>
+		/// <param name="e">Argumenty zdarzenia</param>
 		public override void UpdateTime(object sender, UpdateEventArgs e) {
             if ( IsSelected ) { }
         }

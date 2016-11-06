@@ -8,8 +8,9 @@ using SFML.Graphics;
 using SFML.System;
 
 namespace PracaInzynierska.Map {
+	using Beeing = Beeing.Beeing;
 
-    /// <summary>
+	/// <summary>
     /// Klasa reprezentujaca pole mapy
     /// </summary>
 	public partial class MapField : Drawable {
@@ -24,7 +25,7 @@ namespace PracaInzynierska.Map {
         public MapField(int x, int y, Map map) {
             map_ = map;
 			Neighbour = new FieldNeighvours(this);
-			
+
 			MapPosition = new Vector2i(x, y);
 		}
 
@@ -108,11 +109,11 @@ namespace PracaInzynierska.Map {
                 switch ( fieldSeed_ ) { //przypisanie odopwiedniej tekstury i predkosci poruszania sie w zaleznosci od terenu
                     case MapSeed.Value.Sand:
                         FieldTexture = MapTextures.SandTexture;
-                        MoveSpeed = 0.7;
+                        MoveSpeed = 0.6;
                         break;
                     case MapSeed.Value.Grass:
                         FieldTexture = MapTextures.GrassTexture;
-                        MoveSpeed = 0.9;
+                        MoveSpeed = 0.95;
                         break;
                     case MapSeed.Value.Rock:
                         FieldTexture = MapTextures.RockTexture;
@@ -146,19 +147,13 @@ namespace PracaInzynierska.Map {
         /// <summary>
         /// Zraca 'true' jesli na polu stoi jakas jednostka
         /// </summary>
-        public bool IsUnitOn => UnitOn != null;
+        public bool IsSomethingOn => OnField.Count > 0;
 
         /// <summary>
         /// Zwraca jednostke stojaca na danym polu.
         /// <exception cref="FieldIsNotEmptyException">Jesli jest proba przypisania wartosc, a na polu jest juz jakas jednostka wyrzuci wyjatek</exception>
         /// </summary>
-        public Beeing.Beeing UnitOn {
-            get { return unitOn_; }
-            set {
-                if ( IsUnitOn && (value != null) ) throw new FieldIsNotEmptyException();
-                unitOn_ = value;
-            }
-        }
+        public List<Beeing> OnField { get; } = new List<Beeing>();
 
         /// <summary>
         /// Zwraca wartosc 'true' jesli istnieje mozliwosc przejscia przez to pole.
@@ -176,12 +171,14 @@ namespace PracaInzynierska.Map {
         /// <param name="e">Argumenty z jakimi otrzymano event</param>
         internal void MapResized(object sender, MapResizedEventArgs e) {
             FieldSeed = FieldSeed;
-	        if (UnitOn is Animal a) {
-				a.Texture = new Sprite(MapTextures.AnimalTexture);
-	        } else if (UnitOn is Men m) {
-				m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
-				m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
-	        }
+	        foreach ( Beeing beeing in OnField ) {
+				if ( beeing is Animal a ) {
+					a.Texture = new Sprite(MapTextures.AnimalTexture);
+				} else if ( beeing is Men m ) {
+					m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
+					m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
+				}
+			}
         }
 
         /// <summary>
@@ -192,7 +189,11 @@ namespace PracaInzynierska.Map {
 		internal void MapMoved(object sender, MapMovedEventArgs e) {
             ScreenPosition = new Vector2f(ScreenPosition.X + (float)e.dx, ScreenPosition.Y + (float)e.dy);
 
-            if ( IsUnitOn ) UnitOn.ScreenPosition = Center;
+            if ( IsSomethingOn ) {
+	            foreach ( Beeing beeing in OnField ) {
+		            beeing.ScreenPosition = Center;
+				}
+            }
         }
 
         #endregion EventHandlers
@@ -205,19 +206,17 @@ namespace PracaInzynierska.Map {
         /// <param name="first">Pierwsze porownywane pole</param>
         /// <param name="other">Drugie porownywane pole</param>
         /// <returns>'true' jesli pola sa tym samym polem, w przeciwnym wypadku 'false'</returns>
-        public static bool operator ==(MapField first, MapField other) {
-            return first?.MapPosition == other?.MapPosition;
-        }
+        public static bool operator ==(MapField first, MapField other) => first?.MapPosition == other?.MapPosition;
 
-        /// <summary>
+	    /// <summary>
         /// Przeladowany operator nierownosci dwoch pol
         /// </summary>
         /// <param name="first">Pierwsze porownywane pole</param>
         /// <param name="other">Drugie porownywane pole</param>
         /// <returns>'true' jesli pola nie sa tym samym polem, w przeciwnym wypadku 'false'</returns>
-		public static bool operator !=(MapField first, MapField other) { return !(first == other); }
+		public static bool operator !=(MapField first, MapField other) => first?.MapPosition != other?.MapPosition;
 
-        /// <summary>
+	    /// <summary>
         /// Przeładowana funkcja z klasy object sprawdzająca rownosc pol.
         /// </summary>
         /// <returns>''true' jesli pola sa tym samym polem, w przeciwnym wypadku 'false'</returns>
@@ -268,8 +267,7 @@ namespace PracaInzynierska.Map {
 
         private MapSeed.Value fieldSeed_;
         private readonly PracaInzynierska.Map.Map map_;
-        private Beeing.Beeing unitOn_;
 
-        #endregion PrivateVars
+	    #endregion PrivateVars
     }
 }

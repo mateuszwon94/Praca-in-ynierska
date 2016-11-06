@@ -148,12 +148,12 @@ namespace PracaInzynierska.UserInterface {
 
 		internal virtual void GUI_MouseWheelScrolled(object sender, MouseWheelScrollEventArgs e) {
 			EventHandler<MouseWheelScrollEventArgs> handler = MouseWheelScrolled;
-			
+
 			if ( (handler != null) && IsActive && InsideElement(Mouse.GetPosition()) ) {
 				handler(this, e);
 			}
 		}
-		
+
 		internal virtual void GUI_MouseMoved(object sender, MouseMoveEventArgs e) {
 			EventHandler<MouseMoveEventArgs> handler = MouseMoved;
 

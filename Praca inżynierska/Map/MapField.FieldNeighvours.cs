@@ -53,11 +53,11 @@ namespace PracaInzynierska.Map {
             /// <returns>Iterator po sasiadach</returns>
             public IEnumerator<MapField> GetEnumerator() {
 	            for ( sbyte x = -1 ; x <= 1 ; ++x ) {
-                    for ( sbyte y = -1 ; y <= 1 ; ++y ) {
+		            for ( sbyte y = -1 ; y <= 1 ; ++y ) {
                         if ( (x == 0) && (y == 0) ) continue;
 
-	                    MapField mf;
-	                    try {
+			            MapField mf;
+			            try {
                             mf = this[x, y];
                         } catch ( NoSouchNeighbourException ) {
                             continue;
@@ -65,16 +65,16 @@ namespace PracaInzynierska.Map {
 
                         yield return mf;
                     }
-                }
+	            }
             }
 
             /// <summary>
             /// Funkcja generujaca odwolania do kolejnych istniejacych sasiadow poczawszy od [-1, -1]
             /// </summary>
             /// <returns>Iterator po sasiadach</returns>
-            IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-            #endregion Iterators
+	        #endregion Iterators
 
             #region PrivateVars
 

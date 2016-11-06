@@ -29,11 +29,9 @@ namespace PracaInzynierska {
 		public static void Main(string[] args) {
 
 			//Inicjalizacja okna
-			window = new RenderWindow(new VideoMode(1280, 720), "Praca inzynierska");
+			window = new RenderWindow(new VideoMode(1280, 720, 32), "Praca inzynierska",Styles.Close);
 			window.Closed += (o, e) => window.Close();
-			window.KeyPressed += (o, e) => {
-									 if ( e.Code == Keyboard.Key.Escape ) window.Close();
-								 };
+			window.KeyPressed += (o, e) => { if ( e.Code == Keyboard.Key.Escape ) { window.Close(); } };
 			origWindowSize = window.Size;
 
 			DisplayTitle();
@@ -48,7 +46,7 @@ namespace PracaInzynierska {
 			window.MouseMoved += map.Map_MouseMoved;
 			window.MouseWheelScrolled += map.Map_MouseWheelScrolled;
 			WriteLine("Map created!");
-			
+
 			WriteLine("Start creating colonist!");
 			List<Men> colonists = new List<Men>() {
 									  new Men() {
@@ -59,7 +57,7 @@ namespace PracaInzynierska {
 										  IsSelected = false
 									  }
 								  };
-		
+
 
 			foreach ( Men colonist in colonists ) {
 				map.UpdateTime += colonist.UpdateTime;
@@ -124,20 +122,42 @@ namespace PracaInzynierska {
 				WriteLine($"Field [{start.MapPosition.X}, {start.MapPosition.Y}] is avaliable = {start.IsAvaliable}");
                 WriteLine($"Field [{stop.MapPosition.X}, {stop.MapPosition.Y}] is avaliable = {stop.IsAvaliable}");
                 WriteLine("But path between this field dose not exists!");
-                ReadLine();
-				return;
+				path = null;
 			}
 			WriteLine("Path created!");
 
 			WriteLine("Start creating herd!");
 			MapField mapField;
+			int center = map.Size / 2;
 			do {
-				int x = rand.Next(map.Size);
-				int y = rand.Next(map.Size);
+				int x = rand.Next(center - center / 2, center + center / 2);
+				int y = rand.Next(center - center / 2, center + center / 2);
 				mapField = map[x, y];
 			} while ( !mapField.IsAvaliable );
+			WriteLine($"Start from - {mapField}");
+
+			/*MapField goToMapField;
+			do {
+				int x = rand.Next(map.Size / 2);
+				int y = rand.Next(map.Size / 2);
+				goToMapField = map[x, y];
+			} while ( !goToMapField.IsAvaliable );
+			WriteLine($"End on - {goToMapField}");
+
+			Animal an = new Animal() {
+				MoveSpeed = 1,
+				Location = mapField,
+				Texture = new Sprite(AnimalTexture),
+				GoToField = goToMapField,
+			};
+			map.UpdateTime += an.UpdateTime;*/
+
 			Herd herd = new Herd(mapField, 5);
+
+			map.UpdateTime += herd.UpdateTime;
+			foreach ( Animal animal in herd ) { map.UpdateTime += animal.UpdateTime; }
 			WriteLine("Herd created!");
+
 
 			time.Start();
 
@@ -147,28 +167,27 @@ namespace PracaInzynierska {
 				window.Clear();
 
 				time.Stop();
-				
+
 				map.Update(time.Elapsed);
 
 				time.Restart();
 
 				window.Draw(map);
 
-                if ( path != null ) {
-                    foreach ( MapField field in path ) {
-                        //narysowanie tymczasowej sciezki
-                        Sprite val = new Sprite(SelectedTexture) {
-                                         Position = field.ScreenPosition
-                                     };
-                        window.Draw(val);
-                    }
-                }
-                
-                foreach ( var colonist in colonists ) {
+				if ( path != null ) {
+					foreach ( Sprite val in path.Select(field => new Sprite(SelectedTexture) {
+																	 Position = field.ScreenPosition
+																 }) ) {
+						window.Draw(val);
+					}
+				}
+
+				foreach ( var colonist in colonists ) {
 					window.Draw(colonist);
 				}
 				window.Draw(herd);
-	            
+	            //window.Draw(an);
+
 				window.Draw(gui);
 
 				window.Display();
