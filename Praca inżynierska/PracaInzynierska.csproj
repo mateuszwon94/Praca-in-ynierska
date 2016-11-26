@@ -117,9 +117,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Beeing\Animal.cs" />
-    <Compile Include="Beeing\Beeing.cs" />
-    <Compile Include="Beeing\Men.cs" />
+    <Compile Include="Beeings\Animal.cs" />
+    <Compile Include="Beeings\Beeing.cs" />
+    <Compile Include="Beeings\Men.cs" />
+    <Compile Include="Constructs\Construct.cs" />
     <Compile Include="Events\MapMovedEventArgs.cs" />
     <Compile Include="Events\MapResizedEventArgs.cs" />
     <Compile Include="Exceptions\NoSouchNeighbourException.cs" />

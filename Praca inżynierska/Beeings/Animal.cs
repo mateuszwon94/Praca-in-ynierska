@@ -1,21 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PracaInzynierska.Events;
-using PracaInzynierska.Map;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using static PracaInzynierska.Utils.Algorithm.PathFinding;
-using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
-using static PracaInzynierska.Utils.Math.Math;
-
-namespace PracaInzynierska.Beeing {
-	using System.Runtime.CompilerServices;
-	using Exceptions;
+﻿namespace PracaInzynierska.Beeings {
+	using System;
+	using System.Collections.Generic;
+	using System.Linq;
+	using Events;
+	using Map;
+	using SFML.Graphics;
+	using SFML.System;
 	using Utils.Algorithm;
+	using static Utils.Math.Math;
 
 	/// <summary>
 	/// Klasa odpowiadajaca za zwierzeta
@@ -36,13 +28,11 @@ namespace PracaInzynierska.Beeing {
 			// ruszanie sie zwierzecia
 			if ( (GoToField != null) && (counter_ == 0)) {
 
-				Console.WriteLine($"{Location.MapPosition}\t{GoToField.MapPosition}");
-
 				// Stworzenie sciezki i wybranie pola na ktore ma sie zwierze poruszyc
 				if ( !Location.Neighbour.Contains(GoToField) ) {
 					if ( isOnfield_ && (path_ == null) ) {
 						try {
-							path_ = AStar(Location, GoToField, ManhattanDistance);
+							path_ = PathFinding.AStar(Location, GoToField, PathFinding.Metric.ManhattanDistance);
 							GoToField = path_[1];
 							path_ = null;
 						} catch ( Exception ) {
@@ -78,12 +68,13 @@ namespace PracaInzynierska.Beeing {
 		/// Funkcja transformujaca tekture tak, zeby jej punkt Origin byl w srodku
 		/// </summary>
 		/// <param name="tex">Tekstura ktora trzeba przetransformowac</param>
-		protected override void TransformTexture(Sprite tex) {
+		protected override Sprite TransformTexture(Sprite tex) {
 			base.TransformTexture(tex);
 			if ( GoToField != null ) {
 				tex.Position += new Vector2f((float)Lerp(tex.Position.X, GoToField.Center.X, moved_),
 											 (float)Lerp(tex.Position.Y, GoToField.Center.Y, moved_));
 			}
+			return tex;
 		}
 
 		/// <summary>
@@ -92,8 +83,7 @@ namespace PracaInzynierska.Beeing {
 		public override Sprite Texture {
 			get { return texture_; }
 			set {
-				texture_ = value;
-				TransformTexture(texture_);
+				texture_ = TransformTexture(value);
 			}
 		}
 

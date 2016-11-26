@@ -21,28 +21,28 @@ namespace PracaInzynierska.Textures {
 		/// <summary>
 		/// Funkcja generujaca Wszystkie tekstury potrzebne w grze.
 		/// </summary>
-		/// <param name="size">Rozmiar pola planszy dla jakiego maja byc wygenerowane tekstury</param>
-		public static void GenerateAll(uint size) {
-			GrassTexture = GenerateMapTexture(size, new Color(0, 200, 0));
-			SandTexture = GenerateMapTexture(size, new Color(200, 200, 0));
-			RockTexture = GenerateMapTexture(size, new Color(127, 127, 127));
-			SelectedTexture = GenerateMapTexture(size, new Color(255, 255, 255, 127));
+		/// <param name="screenSize">Rozmiar pola planszy dla jakiego maja byc wygenerowane tekstury</param>
+		public static void GenerateAll(uint screenSize) {
+			GrassTexture = GenerateMapTexture(screenSize, new Color(0, 200, 0));
+			SandTexture = GenerateMapTexture(screenSize, new Color(200, 200, 0));
+			RockTexture = GenerateMapTexture(screenSize, new Color(127, 127, 127));
+			SelectedTexture = GenerateMapTexture(screenSize, new Color(255, 255, 255, 127));
 
-			MenTexture = GenerateBeeingTexture(size, Color.Cyan);
-			MenTextureSelected = GenerateBeeingTexture(size, Color.Magenta);
-			AnimalTexture = GenerateBeeingTexture(size, new Color(75, 75, 255), 6);
+			MenTexture = GenerateBeeingTexture(screenSize, Color.Cyan);
+			MenTextureSelected = GenerateBeeingTexture(screenSize, Color.Magenta);
+			AnimalTexture = GenerateBeeingTexture(screenSize, new Color(75, 75, 255), 6);
 		}
 
 		/// <summary>
 		/// Funkcja generujaca pole planszy.
 		/// </summary>
-		/// <param name="size">Rozmiar pola</param>
+		/// <param name="screenSize">Rozmiar pola</param>
 		/// <param name="color">Color pola</param>
 		/// <returns>Wygenerowana tekstura</returns>
-		public static Texture GenerateMapTexture(uint size, Color color) {
-			RenderTexture renderTexture = new RenderTexture(size, size);
+		public static Texture GenerateMapTexture(uint screenSize, Color color) {
+			RenderTexture renderTexture = new RenderTexture(screenSize, screenSize);
 			renderTexture.Clear(Color.Transparent);
-			RectangleShape box = new RectangleShape(new Vector2f(size-1, size-1)) {
+			RectangleShape box = new RectangleShape(new Vector2f(screenSize-1, screenSize-1)) {
 									 Position = new Vector2f(1, 1),
 									 FillColor = color,
 									 OutlineThickness = 1,
@@ -57,14 +57,14 @@ namespace PracaInzynierska.Textures {
 		/// <summary>
 		/// Funkcja generujaca teksture istot zywych na planszy, jako figure foremna.
 		/// </summary>
-		/// <param name="size">Rozmiar pola planzy</param>
+		/// <param name="screenSize">Rozmiar pola planzy</param>
 		/// <param name="color">Kolor istoty</param>
 		/// <param name="pointCount">Liczba bokow wygenerowanej figory foremnej (domyslnie - 30)</param>
 		/// <returns>Wygenerowana tekstura</returns>
-		public static Texture GenerateBeeingTexture(uint size, Color color, uint pointCount = 30) {
-			RenderTexture renderTexture = new RenderTexture(size, size);
+		public static Texture GenerateBeeingTexture(uint screenSize, Color color, uint pointCount = 30) {
+			RenderTexture renderTexture = new RenderTexture(screenSize, screenSize);
 			renderTexture.Clear(Color.Transparent);
-			CircleShape circle = new CircleShape((size / 2) -1, pointCount) {
+			CircleShape circle = new CircleShape((screenSize / 2) -1, pointCount) {
 									 FillColor = color,
 									 Position = new Vector2f(1, 1),
 									 OutlineThickness = 1,
@@ -74,6 +74,21 @@ namespace PracaInzynierska.Textures {
 			return new Texture(renderTexture.Texture) {
 					   Smooth = true
 				   };
+		}
+
+		public static Texture GenerateConstructTexture(uint screenSizeX, uint screenSizeY, Color color) {
+			RenderTexture renderTexture = new RenderTexture(screenSizeX, screenSizeY);
+			renderTexture.Clear(Color.Transparent);
+			RectangleShape rect = new RectangleShape(new Vector2f(screenSizeX, screenSizeY)) {
+									  FillColor = color,
+									  Position = new Vector2f(1, 1),
+									  OutlineThickness = 1,
+									  OutlineColor = Color.Black,
+								  };
+			renderTexture.Draw(rect);
+			return new Texture(renderTexture.Texture) {
+				Smooth = true
+			};
 		}
 
 		#endregion

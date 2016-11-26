@@ -36,7 +36,7 @@ namespace PracaInzynierska.UserInterface.Controls {
 		/// <summary>
 		/// Rozmiar elementu
 		/// </summary>
-		public override Vector2u Size => ButtonTexture.Texture.Size;
+		public override Vector2u ScreenSize => ButtonTexture.Texture.Size;
 
 		/// <summary>
 		/// Tekst jaki wyswietlany jest na przycisku

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using PracaInzynierska.Beeing;
 using PracaInzynierska.Events;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Map;
@@ -14,10 +13,11 @@ using PracaInzynierska.Utils.Interfaces;
 using SFML.Window;
 using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
-using static PracaInzynierska.Beeing.Beeing;
+using static PracaInzynierska.Beeings.Beeing;
 using static System.Math;
 
 namespace PracaInzynierska.Utils.Algorithm {
+	using Beeings;
 	using Map = Map.Map;
 
 	/// <summary>

@@ -1,4 +1,7 @@
-﻿namespace PracaInzynierska.Utils.Math {
+﻿using System.Runtime.InteropServices;
+
+namespace PracaInzynierska.Utils.Math {
+
 	public static class Math {
 
 		/// <summary>

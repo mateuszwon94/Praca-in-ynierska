@@ -9,6 +9,7 @@ using PracaInzynierska.Textures;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using PracaInzynierska.Beeings;
 
 namespace PracaInzynierska.Map {
 
@@ -25,7 +26,7 @@ namespace PracaInzynierska.Map {
 	    /// <param name="mapSeed">Okresla proporcje w występowaniu terenu</param>
 	    public Map(int size, MapSeed mapSeed) {
 			//Wygenerowanie tekstur pol planszy
-			MapTextures.GenerateAll((uint)MapField.Size);
+			MapTextures.GenerateAll((uint)MapField.ScreenSize);
 
 			// Inicjalizacja rozmiaru i pol
 			Size = size;
@@ -119,16 +120,18 @@ namespace PracaInzynierska.Map {
         /// <param name="target">Cel, na ktorym jest rysowana</param>
         /// <param name="states">Stan</param>
         public void Draw(RenderTarget target, RenderStates states) {
-            for ( int i = 0 ; i < Size ; ++i ) {
-                for ( int j = 0 ; j < Size ; ++j ) {
-                    if ( this[i, j].IsFieldSeed && (this[i, j].Field.Position.X >= -MapField.Size) &&
-                         (this[i, j].Field.Position.X <= Program.window.Size.X) &&
-                         (this[i, j].Field.Position.Y >= -MapField.Size) &&
-                         (this[i, j].Field.Position.Y <= Program.window.Size.Y) ) {
-                        target.Draw(this[i, j].Field, states);
-                    }
-                }
-            }
+	       // List<Drawable> drawables = new List<Drawable>(Size * Size * 2);
+	        foreach ( MapField field in this.Where(field => field.IsFieldSeed && field.IsInsideWindows()) ) {
+		        target.Draw(field, states);
+		        /*drawables.Insert(0, field);
+		        drawables.AddRange(field.OnField);
+
+		        if ( field.ConstructOn != null && field.ConstructOn.BaseField == field) {
+			        drawables.Add(field.ConstructOn);
+		        }*/
+	        }
+
+	       // foreach ( Drawable drawable in drawables ) { target.Draw(drawable, states); }
         }
 
         #endregion Drawable
@@ -214,22 +217,22 @@ namespace PracaInzynierska.Map {
 			int delta = (int)e.Delta;
 
 			//Czy mapa nie jest za duża lub za mala żeby ją skalowac bardziej
-			if ( ((MapField.Size == 20) && (delta < 0)) || ((MapField.Size == 30) && (delta > 0)) ) {
+			if ( ((MapField.ScreenSize == 20) && (delta < 0)) || ((MapField.ScreenSize == 30) && (delta > 0)) ) {
 				return;
 			}
 
 			//Nowa delta, gdy stara przekroczylaby dopuszczalny wielkosc pol
-			if ( MapField.Size + delta < 20 ) {
-				delta = MapField.Size - 20;
-			} else if ( MapField.Size + delta > 30 ) {
-				delta = 30 - MapField.Size;
+			if ( MapField.ScreenSize + delta < 20 ) {
+				delta = MapField.ScreenSize - 20;
+			} else if ( MapField.ScreenSize + delta > 30 ) {
+				delta = 30 - MapField.ScreenSize;
 			}
 
 		    if ( delta == 0 ) return;
 
-		    MapField.Size += delta;
+		    MapField.ScreenSize += delta;
 
-		    MapTextures.GenerateAll((uint)MapField.Size);
+		    MapTextures.GenerateAll((uint)MapField.ScreenSize);
 
 		    MapResized?.Invoke(this, new MapResizedEventArgs(delta));
 		}
@@ -290,7 +293,7 @@ namespace PracaInzynierska.Map {
 
         #region PrivateVars
 
-        private static Random rand = new Random();
+        private static Random rand = new Random(1000);
         private readonly List<List<MapField>> Grid;
         private Vector2f? prevMousePos;
 

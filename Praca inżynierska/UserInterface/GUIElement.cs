@@ -42,7 +42,7 @@ namespace PracaInzynierska.UserInterface {
 		/// <param name="y">Pozycja Y na ekranie</param>
 		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public bool InsideElement(int x, int y) {
-			return (Position.X <= x) && (x < Position.X + Size.X) && (Position.Y <= y) && (y < Position.Y + Size.Y);
+			return (Position.X <= x) && (x < Position.X + ScreenSize.X) && (Position.Y <= y) && (y < Position.Y + ScreenSize.Y);
 		}
 
 		/// <summary>
@@ -51,7 +51,7 @@ namespace PracaInzynierska.UserInterface {
 		/// <param name="poition">Kordynaty na ekranie</param>
 		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public bool InsideElement(Vector2i poition) {
-			return (Position.X <= poition.X) && (poition.X < Position.X + Size.X) && (Position.Y <= poition.Y) && (poition.Y < Position.Y + Size.Y);
+			return (Position.X <= poition.X) && (poition.X < Position.X + ScreenSize.X) && (Position.Y <= poition.Y) && (poition.Y < Position.Y + ScreenSize.Y);
 		}
 
 		#endregion
@@ -71,7 +71,7 @@ namespace PracaInzynierska.UserInterface {
 		/// <summary>
 		/// Rozmiar elementu
 		/// </summary>
-		public abstract Vector2u Size { get; }
+		public abstract Vector2u ScreenSize { get; }
 
 		/// <summary>
 		/// Czy element jest aktywny

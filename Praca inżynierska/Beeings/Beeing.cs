@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SFML.Graphics;
-using SFML.Audio;
-using SFML.System;
-using SFML.Window;
-using PracaInzynierska.Events;
-using PracaInzynierska.Exceptions;
-using PracaInzynierska.Map;
-using static System.Math;
-using PracaInzynierska.Utils.Interfaces;
-
-namespace PracaInzynierska.Beeing {
+﻿namespace PracaInzynierska.Beeings {
+	using System;
+	using Events;
+	using Map;
+	using SFML.Graphics;
+	using SFML.System;
+	using SFML.Window;
+	using Utils.Interfaces;
 
 	/// <summary>
 	/// Podstawowa klasa odpowiedajaca za zyjace stworzenie
@@ -102,7 +94,7 @@ namespace PracaInzynierska.Beeing {
 		/// <param name="y">Pozycja Y na ekranie</param>
 		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public virtual bool InsideElement(int x, int y) {
-			return (ScreenPosition.X <= x) && (x < ScreenPosition.X + Size.X) && (ScreenPosition.Y <= y) && (y < ScreenPosition.Y + Size.Y);
+			return (ScreenPosition.X <= x) && (x < ScreenPosition.X + ScreenSize.X) && (ScreenPosition.Y <= y) && (y < ScreenPosition.Y + ScreenSize.Y);
 		}
 
 		/// <summary>
@@ -111,7 +103,7 @@ namespace PracaInzynierska.Beeing {
 		/// <param name="poition">Kordynaty na ekranie</param>
 		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public virtual bool InsideElement(Vector2i poition) {
-			return (ScreenPosition.X <= poition.X) && (poition.X < ScreenPosition.X + Size.X) && (ScreenPosition.Y <= poition.Y) && (poition.Y < ScreenPosition.Y + Size.Y);
+			return (ScreenPosition.X <= poition.X) && (poition.X < ScreenPosition.X + ScreenSize.X) && (ScreenPosition.Y <= poition.Y) && (poition.Y < ScreenPosition.Y + ScreenSize.Y);
 		}
 
 		/// <summary>
@@ -123,9 +115,10 @@ namespace PracaInzynierska.Beeing {
 		/// Funkcja transformujaca tekture tak, zeby jej punkt Origin byl w srodku
 		/// </summary>
 		/// <param name="tex">Tekstura ktora trzeba przetransformowac</param>
-		protected virtual void TransformTexture(Sprite tex) {
+		protected virtual Sprite TransformTexture(Sprite tex) {
 			tex.Origin = new Vector2f(tex.Texture.Size.X / 2f, tex.Texture.Size.Y / 2f);
 			tex.Position = Location.Center;
+			return tex;
 		}
 
 		/// <summary>
@@ -158,7 +151,7 @@ namespace PracaInzynierska.Beeing {
 		/// <summary>
 		/// Zwraca rozmiar tekstury
 		/// </summary>
-		public Vector2u Size => Texture.Texture.Size;
+		public Vector2u ScreenSize => Texture.Texture.Size;
 
 		private MapField mapField_;
 
@@ -168,10 +161,7 @@ namespace PracaInzynierska.Beeing {
 		/// <param name="target">Obiekt na ktorym ma byc narysowane stworzenie</param>
 		/// <param name="states">Stan</param>
 		public virtual void Draw(RenderTarget target, RenderStates states) {
-			if ( (Texture.Position.X >= -Texture.Texture.Size.X) &&
-				 (Texture.Position.X <= Program.window.Size.X) &&
-				 (Texture.Position.Y >= -Texture.Texture.Size.Y) &&
-				 (Texture.Position.Y <= Program.window.Size.Y) ) { target.Draw(Texture, states); }
+			target.Draw(Texture, states);
 		}
 
 		/// <summary>
@@ -181,7 +171,7 @@ namespace PracaInzynierska.Beeing {
 		/// <param name="to">Stworzenie do ktorego liczymy odleglosc</param>
 		/// <returns>Odleglosc miedzy stworzeniami</returns>
 		public static float Distance(Beeing from, Beeing to) {
-			return (float) Round(Sqrt((from.Location.MapPosition.X - to.Location.MapPosition.X) *
+			return (float) Math.Round(Math.Sqrt((from.Location.MapPosition.X - to.Location.MapPosition.X) *
 									  (from.Location.MapPosition.X - to.Location.MapPosition.X) +
 									  (from.Location.MapPosition.Y - to.Location.MapPosition.Y) *
 									  (from.Location.MapPosition.Y - to.Location.MapPosition.Y)), 4);

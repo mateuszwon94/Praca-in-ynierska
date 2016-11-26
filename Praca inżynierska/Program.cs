@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using PracaInzynierska.Beeing;
+using PracaInzynierska.Constructs;
 using PracaInzynierska.Map;
 using PracaInzynierska.UserInterface;
 using PracaInzynierska.UserInterface.Controls;
@@ -20,11 +20,13 @@ using static System.Console;
 using PracaInzynierska.Textures;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Utils.Algorithm;
-using static PracaInzynierska.Beeing.Men;
+using static PracaInzynierska.Beeings.Men;
 using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
 
 namespace PracaInzynierska {
+	using Beeings;
+
 	public static class Program {
 		public static void Main(string[] args) {
 
@@ -100,27 +102,23 @@ namespace PracaInzynierska {
 		             stop  = null;
 
             //Wyszukanie pierwszego dostepnego pola
-            foreach ( MapField field in map ) {
-                if ( field.IsAvaliable ) {
-                    start = field;
-                    break;
-                }
+            foreach ( MapField field in map.Where(field => field.IsAvaliable) ) {
+	            start = field;
+	            break;
             }
 
             //wyszukanie ostatniego dostepnego pola
-            foreach ( MapField field in map.Reverse() ) {
-                if ( field.IsAvaliable ) {
-                    stop = field;
-                    break;
-                }
-			}
+            foreach ( MapField field in map.Reverse().Where(field => field.IsAvaliable) ) {
+	            stop = field;
+	            break;
+            }
 			WriteLine("Sstart and end point found!");
 
 			try { //próba wyznaczenia sciezki miedzy wyznaczonymi polami
                 path = PathFinding.AStar(start, stop, PathFinding.Metric.EuclideanDistance);
 			} catch ( FieldNotAvaliableException ) {
-				WriteLine($"Field [{start.MapPosition.X}, {start.MapPosition.Y}] is avaliable = {start.IsAvaliable}");
-                WriteLine($"Field [{stop.MapPosition.X}, {stop.MapPosition.Y}] is avaliable = {stop.IsAvaliable}");
+				WriteLine($"Texture [{start.MapPosition.X}, {start.MapPosition.Y}] is avaliable = {start.IsAvaliable}");
+                WriteLine($"Texture [{stop.MapPosition.X}, {stop.MapPosition.Y}] is avaliable = {stop.IsAvaliable}");
                 WriteLine("But path between this field dose not exists!");
 				path = null;
 			}
@@ -138,8 +136,8 @@ namespace PracaInzynierska {
 
 			/*MapField goToMapField;
 			do {
-				int x = rand.Next(map.Size / 2);
-				int y = rand.Next(map.Size / 2);
+				int x = rand.Next(map.ScreenSize / 2);
+				int y = rand.Next(map.ScreenSize / 2);
 				goToMapField = map[x, y];
 			} while ( !goToMapField.IsAvaliable );
 			WriteLine($"End on - {goToMapField}");
@@ -158,6 +156,12 @@ namespace PracaInzynierska {
 			foreach ( Animal animal in herd ) { map.UpdateTime += animal.UpdateTime; }
 			WriteLine("Herd created!");
 
+			/*WriteLine("Start creating construct!");
+			Construct construct = new Construct(2, 3, Color.Magenta) {
+																		 BaseField = map[3, 3],
+																		 Status = Construct.State.Done
+																	 };
+			WriteLine("Construct created!");*/
 
 			time.Start();
 
@@ -182,11 +186,14 @@ namespace PracaInzynierska {
 					}
 				}
 
-				foreach ( var colonist in colonists ) {
+				foreach ( Men colonist in colonists ) {
 					window.Draw(colonist);
 				}
-				window.Draw(herd);
+
+	            window.Draw(herd);
 	            //window.Draw(an);
+
+	            //window.Draw(construct);
 
 				window.Draw(gui);
 

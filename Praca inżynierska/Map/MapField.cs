@@ -1,14 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using PracaInzynierska.Beeing;
 using PracaInzynierska.Events;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Textures;
 using SFML.Graphics;
 using SFML.System;
+using static System.Math;
+using System;
 
 namespace PracaInzynierska.Map {
-	using Beeing = Beeing.Beeing;
+	using Beeings;
+	using Constructs;
 
 	/// <summary>
     /// Klasa reprezentujaca pole mapy
@@ -50,9 +52,7 @@ namespace PracaInzynierska.Map {
         /// <param name="target">Cel na ktorym jest rysowana</param>
         /// <param name="states">Stan</param>
         public void Draw(RenderTarget target, RenderStates states) {
-            if ( IsFieldSeed && IsInsideWindows() ) {
-                target.Draw(Field, states);
-            }
+			target.Draw(Texture, states);
         }
 
         #endregion Drawable
@@ -64,20 +64,29 @@ namespace PracaInzynierska.Map {
         /// </summary>
         public Vector2f Center => ScreenPosition + new Vector2f(FieldTexture.Size.X / 2f, FieldTexture.Size.Y / 2f);
 
-        /// <summary>
-        /// Wlasciwosc okreslajaca szybkosc poruszania sie po danym polu
-        /// </summary>
-		public double MoveSpeed { get; private set; }
+		/// <summary>
+		/// Wlasciwosc okreslajaca szybkosc poruszania sie po danym polu
+		/// </summary>
+		public double MoveSpeed {
+			get { return moveSpeed_; }
+			private set {
+				moveSpeed_ = value;
+				//Cost = (float)(1d + (1d - value));
+				Cost = (float)(1d / value);
+			}
+		}
+
+		public float Cost { get; private set; }
 
         /// <summary>
         /// Rozmiar pola
         /// </summary>
-        public static int Size { get; set; } = 25;
+        public static int ScreenSize { get; set; } = 25;
 
         /// <summary>
         /// Obiekt slozacy do rysowania pola
         /// </summary>
-        public Sprite Field { get; internal set; }
+        public Sprite Texture { get; internal set; }
 
         /// <summary>
         /// Zwraca 'true' jesli polu zostalo przypisane juz ziarno
@@ -88,10 +97,10 @@ namespace PracaInzynierska.Map {
         /// Tekstura sluzaca do rysowania pola
         /// </summary>
         public Texture FieldTexture {
-            get { return Field.Texture; }
+            get { return Texture.Texture; }
             internal set {
-                Field = new Sprite(value) {
-                    Position = new Vector2f(MapPosition.X * Size, MapPosition.Y * Size)
+                Texture = new Sprite(value) {
+                    Position = new Vector2f(MapPosition.X * ScreenSize, MapPosition.Y * ScreenSize)
                 };
             }
         }
@@ -106,23 +115,20 @@ namespace PracaInzynierska.Map {
                 fieldSeed_ = value;
                 IsFieldSeed = true;
 
-                switch ( fieldSeed_ ) { //przypisanie odopwiedniej tekstury i predkosci poruszania sie w zaleznosci od terenu
-                    case MapSeed.Value.Sand:
-                        FieldTexture = MapTextures.SandTexture;
-                        MoveSpeed = 0.6;
-                        break;
-                    case MapSeed.Value.Grass:
-                        FieldTexture = MapTextures.GrassTexture;
-                        MoveSpeed = 0.95;
-                        break;
-                    case MapSeed.Value.Rock:
-                        FieldTexture = MapTextures.RockTexture;
-                        MoveSpeed = 0.0;
-                        break;
-                    default:
-                        IsFieldSeed = false;
-                        throw new NoSouchSeed();
-                }
+				//przypisanie odopwiedniej tekstury i predkosci poruszania sie w zaleznosci od terenu
+				if (fieldSeed_ == MapSeed.Value.Sand) {
+					FieldTexture = MapTextures.SandTexture;
+					MoveSpeed = 0.6;
+				} else if (fieldSeed_ == MapSeed.Value.Grass) {
+					FieldTexture = MapTextures.GrassTexture;
+					MoveSpeed = 0.95;
+				} else if (fieldSeed_ == MapSeed.Value.Rock) {
+					FieldTexture = MapTextures.RockTexture;
+					MoveSpeed = 0.0;
+				} else {
+					IsFieldSeed = false;
+					throw new NoSouchSeed();
+				}
             }
         }
 
@@ -140,8 +146,8 @@ namespace PracaInzynierska.Map {
         /// Pozycja danego pola na ekranie
         /// </summary>
         public Vector2f ScreenPosition {
-			get { return Field.Position; }
-			set { Field.Position = value; }
+			get { return Texture.Position; }
+			set { Texture.Position = value; }
         }
 
         /// <summary>
@@ -155,12 +161,14 @@ namespace PracaInzynierska.Map {
         /// </summary>
         public List<Beeing> OnField { get; } = new List<Beeing>();
 
-        /// <summary>
-        /// Zwraca wartosc 'true' jesli istnieje mozliwosc przejscia przez to pole.
-        /// </summary>
-        public bool IsAvaliable => MoveSpeed > 0.0;
+		/// <summary>
+		/// Zwraca wartosc 'true' jesli istnieje mozliwosc przejscia przez to pole.
+		/// </summary>
+		public bool IsAvaliable => MoveSpeed > 0.0 && (ConstructOn == null || ConstructOn?.Status != Construct.State.Done);
 
-        #endregion Properities
+		public Construct ConstructOn { get; set; }
+
+		#endregion Properities
 
         #region EventHandlers
 
@@ -179,6 +187,10 @@ namespace PracaInzynierska.Map {
 					m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
 				}
 			}
+
+	        if ( ConstructOn != null && ConstructOn.BaseField == this ) {
+		        //ConstructOn.Status
+	        }
         }
 
         /// <summary>
@@ -194,6 +206,8 @@ namespace PracaInzynierska.Map {
 		            beeing.ScreenPosition = Center;
 				}
             }
+
+	        if ( ConstructOn != null && ConstructOn.BaseField == this ) { ConstructOn.ScreenPosition = ScreenPosition; }
         }
 
         #endregion EventHandlers
@@ -251,8 +265,8 @@ namespace PracaInzynierska.Map {
         /// </summary>
         /// <returns>'true' jesli sie znajduje, w przeciwnym wypadku 'false'</returns>
         public bool IsInsideWindows() {
-            return (ScreenPosition.X >= Field.Position.X) && (ScreenPosition.X <= Field.Position.X + Field.Texture.Size.X) &&
-                   (ScreenPosition.Y >= Field.Position.Y) && (ScreenPosition.Y <= Field.Position.Y + Field.Texture.Size.Y);
+            return (ScreenPosition.X >= Texture.Position.X) && (ScreenPosition.X <= Texture.Position.X + Texture.Texture.Size.X) &&
+                   (ScreenPosition.Y >= Texture.Position.Y) && (ScreenPosition.Y <= Texture.Position.Y + Texture.Texture.Size.Y);
         }
 
         /// <summary>
@@ -267,7 +281,8 @@ namespace PracaInzynierska.Map {
 
         private MapSeed.Value fieldSeed_;
         private readonly PracaInzynierska.Map.Map map_;
+		private double moveSpeed_;
 
-	    #endregion PrivateVars
+		#endregion PrivateVars
     }
 }

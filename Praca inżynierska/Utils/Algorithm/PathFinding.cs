@@ -5,58 +5,78 @@ using PracaInzynierska.Exceptions;
 using PracaInzynierska.Map;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Math;
 
 namespace PracaInzynierska.Utils.Algorithm {
 	using static PathFinding.Metric;
 
 	public static partial class PathFinding {
-
-        /// <summary>
-        /// Algorytm A* znajdowania najkrotszej sciezki na planszy.
-        /// </summary>
-        /// <param name="from">Pole startowe</param>
-        /// <param name="to">Pole, ktore chcemy osiagnac</param>
-        /// <param name="heuristic">Metryka w jakiej maja byc szacowana odleglosc do pola docelowego</param>
-        /// <returns>Lista pol skladajaca sie na sciezke</returns>
+		/// <summary>
+		/// Algorytm A* znajdowania najkrotszej sciezki na planszy.
+		/// </summary>
+		/// <param name="from">Pole startowe</param>
+		/// <param name="to">Pole, ktore chcemy osiagnac</param>
+		/// <param name="heuristic">Metryka w jakiej maja byc szacowana odleglosc do pola docelowego</param>
+		/// <param name="forbidenFields">Pola przez które nie wolno przejść przy danym poszukiwaniu ścieżki</param>
+		/// <returns>Lista pol skladajaca sie na sciezke</returns>
 		public static IList<MapField> AStar(MapField from, MapField to, Func<MapField, MapField, float> heuristic, params MapField[] forbidenFields) {
-		    if ( (from == null) || (to == null) ) throw new NullReferenceException();			// ktores z pol nie istnieje
-			if ( !to.IsAvaliable ) throw new FieldNotAvaliableException();						// pole jest niedostepne
-			if ( from.Neighbour.Contains(to) ) return new List<MapField>(2) { from, to, };		// pola from i to leza kolo siebie
+		    if ( (from == null) || (to == null) ) throw new NullReferenceException();			                     // ktores z pol nie istnieje
+			if ( !to.IsAvaliable ) throw new FieldNotAvaliableException();					            	         // pole jest niedostepne
+			if ( from.Neighbour.Any(neighbour => neighbour == to) ) return new List<MapField>(2) { from, to, };      // pola from i to leza kolo siebie
 
-            //Lita pol do przeszukania
-			List<PathFindingNode> openList = new List<PathFindingNode> {
-												 new PathFindingNode(from, null, 0, EuclideanDistance(from, to))
+			//Lita pol do przeszukania
+	        List<PathFindingNode> openList = new List<PathFindingNode> {
+												 new PathFindingNode(from)
 											 };
             //Lista przeszukanych pol
-			List<PathFindingNode> closeList = new List<PathFindingNode>();
-	        if ( forbidenFields.Length > 0 ) { closeList.AddRange(forbidenFields.Select(forbidenField => new PathFindingNode(forbidenField, null, 0, float.MinValue))); }
+			List<PathFindingNode> closeList = new List<PathFindingNode>(forbidenFields.Select(forbidenField => new PathFindingNode(forbidenField)));
+
+			bool achivewedGoal = false;
 
 			//dopoki jakiekolwiek pole moze zostac jeszcze przebadane
 	        while ( openList.Count != 0 ) {
 				PathFindingNode current = openList.RemoveAtAndGet(0);
+				closeList.Add(current);
 
-			    if ( current.This == to ) { return ReconstructPath(current); } // znaleziono pole do ktorego dazylismy
+				if ( current.This == to ) {
+			        achivewedGoal = true;
+		        } // znaleziono pole do ktorego dazylismy
 
-			    closeList.Add(current);
+		        if ( achivewedGoal ) {
+			        PathFindingNode endNode = openList.Concat(closeList)
+													  .First(node => node.This == to);
 
-		        Parallel.ForEach(current.This.Neighbour.Where(neighbour => neighbour.IsAvaliable)
-													   .Where(neighbour => !closeList.Contains(neighbour)),
+			        float minValInOpenList = openList.Select(node => node.CostFromStart)
+													 .Min();
+
+			        if ( minValInOpenList < endNode.CostFromStart ) return ReconstructPath(endNode);
+		        }
+
+		        Parallel.ForEach(current.This.Neighbour.Where(neighbour => neighbour.IsAvaliable),
 								 neighbour => {
-									 PathFindingNode neighbourNode = new PathFindingNode(neighbour, current,
-																						 current.CostFromStart +
-																						 EuclideanDistance(current.This, neighbour) * (1f - (1f - (float)current.This.MoveSpeed)),
-																						 heuristic(neighbour, to));
+									 PathFindingNode neighbourNode = new PathFindingNode(neighbour) {
+																		 Parent = current,
+																		 CostFromStart = current.CostFromStart +
+																						 EuclideanDistance(current.This, neighbour) * current.This.Cost,
+																		 CostToEnd = heuristic(neighbour, to)
+																	 };
 
 									 //Zmiana parametrow sciezki jesli droga do sasiada jest krotsza z obecnego pola niz ustalona wczesniej
-									 if ( openList.Contains(neighbourNode) ) {
-										 PathFindingNode oldNode = openList[openList.IndexOf(neighbourNode)];
+									 if ( closeList.Contains(neighbourNode) ) {
+										 PathFindingNode oldNode = closeList[closeList.IndexOf(neighbourNode)];
+										 if ( neighbourNode.CostFromStart < oldNode.CostFromStart ) {
+											 lock ( closeListMutex_ ) closeList.Remove(oldNode);
+											 lock ( openListMutex_ ) openList.Add(neighbourNode);
+										 }
+									 } else if ( openList.Contains(neighbourNode) ) {
+										 PathFindingNode oldNode;
+										 lock ( openListMutex_ ) oldNode = openList[openList.IndexOf(neighbourNode)];
 										 if ( neighbourNode.CostFromStart < oldNode.CostFromStart ) {
 											 oldNode.CostFromStart = neighbourNode.CostFromStart;
-											 oldNode.CostToEnd = neighbourNode.CostToEnd;
 											 oldNode.Parent = neighbourNode.Parent;
 										 }
 									 } else {
-										 lock ( openList ) { openList.Add(neighbourNode); }
+										 lock ( openListMutex_ ) openList.Add(neighbourNode);
 									 }
 								 });
 
@@ -104,12 +124,12 @@ namespace PracaInzynierska.Utils.Algorithm {
 		#region Private
 
 		private class PathFindingNode : IComparable<PathFindingNode> {
-			internal PathFindingNode(MapField This, PathFindingNode Parent, float costFromStart, float costToEnd) {
+			internal PathFindingNode(MapField This) {
 				this.This = This;
-				this.Parent = Parent;
+				Parent = null;
 
-				CostFromStart = costFromStart;
-				CostToEnd = costToEnd;
+				CostFromStart = 0f;
+				CostToEnd = float.MinValue;
 			}
 
 			public MapField This { get; }
@@ -131,10 +151,10 @@ namespace PracaInzynierska.Utils.Algorithm {
 				return This == other.This;
 			}
 
-			public int CompareTo(PathFindingNode other) {
-				if ( this < other ) return -1;
-				else if ( this == other ) return 0;
-				else return 1;
+			public int CompareTo(PathFindingNode two) {
+				if ( AllCost < two.AllCost ) return -1;
+				if ( AllCost == two.AllCost ) return 0;
+				return 1;
 			}
 
 			public override bool Equals(object obj) {
@@ -151,10 +171,12 @@ namespace PracaInzynierska.Utils.Algorithm {
 		}
 
 		private static bool Contains(this IEnumerable<PathFindingNode> list, MapField field) {
-			return list.Any(val => val == new PathFindingNode(field, null, 0, 0));
+			return list.Any(val => val == new PathFindingNode(field));
 		}
 
 		#endregion
 
+		private static object openListMutex_ = new object();
+		private static object closeListMutex_ = new object();
 	}
 }
