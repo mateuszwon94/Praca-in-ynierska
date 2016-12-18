@@ -1,37 +1,30 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using PracaInzynierska.Constructs;
 using PracaInzynierska.Map;
 using PracaInzynierska.UserInterface;
 using PracaInzynierska.UserInterface.Controls;
-using SFML;
-using SFML.Audio;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using static System.Console;
-using PracaInzynierska.Textures;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Utils.Algorithm;
-using static PracaInzynierska.Beeings.Men;
 using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
+using PracaInzynierska.Beeings;
+using PracaInzynierska.Utils;
+using PracaInzynierska.Utils.FuzzyLogic.Variables;
 
 namespace PracaInzynierska {
-	using Beeings;
 
 	public static class Program {
 		public static void Main(string[] args) {
 
 			//Inicjalizacja okna
-			window = new RenderWindow(new VideoMode(1280, 720, 32), "Praca inzynierska",Styles.Close);
+			window = new RenderWindow(new VideoMode(1280, 720, 32), "Praca inzynierska", Styles.Close);
 			window.Closed += (o, e) => window.Close();
 			window.KeyPressed += (o, e) => { if ( e.Code == Keyboard.Key.Escape ) { window.Close(); } };
 			origWindowSize = window.Size;
@@ -49,42 +42,32 @@ namespace PracaInzynierska {
 			window.MouseWheelScrolled += map.Map_MouseWheelScrolled;
 			WriteLine("Map created!");
 
-			WriteLine("Start creating colonist!");
-			List<Men> colonists = new List<Men>() {
-									  new Men() {
-										  MoveSpeed = 1,
-										  Location = map[5, 5],
-										  TextureSelected = new Sprite(MenTextureSelected),
-										  TextureNotSelected = new Sprite(MenTexture),
-										  IsSelected = false
-									  }
-								  };
-
-
-			foreach ( Men colonist in colonists ) {
-				map.UpdateTime += colonist.UpdateTime;
-				window.KeyPressed += colonist.Window_KeyPressed;
-				window.KeyReleased += colonist.Window_KeyReleased;
-				window.MouseButtonPressed += colonist.Window_MouseButtonPressed;
-				window.MouseButtonReleased += colonist.Window_MouseButtonReleased;
-			}
-			WriteLine("Colonist created!");
-
 			WriteLine("Start creating GUI!");
 			//Tworzenie GUI
-			gui = new GUI() {
-					  new Button {
-						  Name = "First Button",
-						  IsActive = true,
-						  ButtonTexture = new Sprite(NormalButtonTexture),
-						  ButtonText = new Text("Zamknij!", font) {
-										   CharacterSize = 20,
-										   Color = Color.Black
-									   },
-						  Position = new Vector2f(20, window.Size.Y - 60),
-						  MouseButtonPressedHandler = (s, e) => { if (Mouse.IsButtonPressed(Mouse.Button.Left)) window.Close(); }
-					  }
-				  };
+			gui = new GUI() { new Button {
+											   Name = "Close Button",
+											   IsActive = true,
+											   ButtonTexture = new Sprite(NormalButtonTexture),
+											   ButtonText = new Text("Zamknij!", font) {
+																						   CharacterSize = 20,
+																						   Color = Color.Black
+																					   },
+											   Position = new Vector2f(20, window.Size.Y - 60),
+											   MouseButtonPressedHandler = (s, e) => {
+																			   if ( Mouse.IsButtonPressed(Mouse.Button.Left) ) window.Close();
+																		   }
+										   },
+								new BuildButton() {
+													  Name = "Build Button",
+													  IsActive = true,
+													  ButtonTexture = new Sprite(NormalButtonTexture),
+													  ButtonText = new Text("Buduj", font) {
+																							   CharacterSize = 20,
+																							   Color = Color.Black
+																						   },
+													  Position = new Vector2f(20, window.Size.Y - 120)
+												  }
+							};
 
 			window.KeyPressed += gui.Window_KeyPressed;
 			window.KeyReleased += gui.Window_KeyReleased;
@@ -94,7 +77,31 @@ namespace PracaInzynierska {
 			window.MouseWheelScrolled += gui.Window_MouseWheelScrolled;
 			WriteLine("GUI created!");
 
-			WriteLine("Start creating path!");
+			WriteLine("Start creating colony!");
+			Colony colony = new Colony(map, window);
+			map.UpdateTime += colony.UpdateTime;
+			colony.AddColonist(new Men() {
+											 Name = "Adam",
+											 MoveSpeed = 5,
+											 Location = map[10, 20],
+											 TextureSelected = new Sprite(MenTextureSelected),
+											 TextureNotSelected = new Sprite(MenTexture),
+											 IsSelected = false,
+											 HP = new FuzzyHP(50f) {
+																	   MaxHP = 50f
+																   },
+											 Strength = 5f,
+											 Mining = 3f,
+											 Constructing = 4f,
+											 Accuracy = 4.5f,
+										 });
+			colony.AddConstruct(new Construct(2, 3, map[3, 3], Color.Magenta) {
+																				  MaxConstructPoints = 200
+																			  });
+
+			WriteLine("Colony created!");
+			
+			/*WriteLine("Start creating path!");
 			WriteLine("Searching for start and end point!");
 			//tymczasowe sprawdzenie wyznaczanie sciezki
 			IList<MapField> path;
@@ -122,7 +129,7 @@ namespace PracaInzynierska {
                 WriteLine("But path between this field dose not exists!");
 				path = null;
 			}
-			WriteLine("Path created!");
+			WriteLine("Path created!");*/
 
 			WriteLine("Start creating herd!");
 			MapField mapField;
@@ -134,34 +141,11 @@ namespace PracaInzynierska {
 			} while ( !mapField.IsAvaliable );
 			WriteLine($"Start from - {mapField}");
 
-			/*MapField goToMapField;
-			do {
-				int x = rand.Next(map.ScreenSize / 2);
-				int y = rand.Next(map.ScreenSize / 2);
-				goToMapField = map[x, y];
-			} while ( !goToMapField.IsAvaliable );
-			WriteLine($"End on - {goToMapField}");
-
-			Animal an = new Animal() {
-				MoveSpeed = 1,
-				Location = mapField,
-				Texture = new Sprite(AnimalTexture),
-				GoToField = goToMapField,
-			};
-			map.UpdateTime += an.UpdateTime;*/
-
 			Herd herd = new Herd(mapField, 5);
 
 			map.UpdateTime += herd.UpdateTime;
 			foreach ( Animal animal in herd ) { map.UpdateTime += animal.UpdateTime; }
 			WriteLine("Herd created!");
-
-			/*WriteLine("Start creating construct!");
-			Construct construct = new Construct(2, 3, Color.Magenta) {
-																		 BaseField = map[3, 3],
-																		 Status = Construct.State.Done
-																	 };
-			WriteLine("Construct created!");*/
 
 			time.Start();
 
@@ -178,29 +162,25 @@ namespace PracaInzynierska {
 
 				window.Draw(map);
 
-				if ( path != null ) {
+				/*if ( path != null ) {
 					foreach ( Sprite val in path.Select(field => new Sprite(SelectedTexture) {
 																	 Position = field.ScreenPosition
 																 }) ) {
 						window.Draw(val);
 					}
-				}
+				}*/
 
-				foreach ( Men colonist in colonists ) {
-					window.Draw(colonist);
-				}
+				window.Draw(colony);
 
 	            window.Draw(herd);
 	            //window.Draw(an);
-
-	            //window.Draw(construct);
 
 				window.Draw(gui);
 
 				window.Display();
 			}
 		}
-
+		
 		/// <summary>
 		/// Funkcja wyświetla ekran tytułowy
 		/// </summary>
@@ -326,6 +306,8 @@ namespace PracaInzynierska {
 			window.Draw(time);
 			window.Display();
 		}
+
+
 
 		/// <summary>
 		/// Podstawowa czcionka

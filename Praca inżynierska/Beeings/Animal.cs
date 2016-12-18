@@ -1,18 +1,24 @@
-﻿namespace PracaInzynierska.Beeings {
-	using System;
-	using System.Collections.Generic;
-	using System.Linq;
-	using Events;
-	using Map;
-	using SFML.Graphics;
-	using SFML.System;
-	using Utils.Algorithm;
-	using static Utils.Math.Math;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using PracaInzynierska.Events;
+using PracaInzynierska.Map;
+using SFML.Graphics;
+using SFML.System;
+using PracaInzynierska.Utils.Algorithm;
+using static PracaInzynierska.Utils.Math;
+using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
+
+namespace PracaInzynierska.Beeings {
 
 	/// <summary>
 	/// Klasa odpowiadajaca za zwierzeta
 	/// </summary>
 	public class Animal : Beeing {
+
+		public Animal() : base() {
+			heuristic_ = ManhattanDistance;
+		}
 
 		/// <summary>
 		/// Funkcja wywoływana przy kazdym odswierzeniu okranu
@@ -25,58 +31,10 @@
 			if ( !IsMoveing && (counter_ == 0) && (rand_.NextDouble() <= 0.25) ) { counter_ = (uint)rand_.Next(50, 150); }
 			if ( counter_ != 0 ) { --counter_; }
 
-			// ruszanie sie zwierzecia
-			if ( (GoToField != null) && (counter_ == 0)) {
-
-				// Stworzenie sciezki i wybranie pola na ktore ma sie zwierze poruszyc
-				if ( !Location.Neighbour.Contains(GoToField) ) {
-					if ( isOnfield_ && (path_ == null) ) {
-						try {
-							path_ = PathFinding.AStar(Location, GoToField, PathFinding.Metric.ManhattanDistance);
-							GoToField = path_[1];
-							path_ = null;
-						} catch ( Exception ) {
-							return;
-						}
-					}
-				}
-
-				IsMoveing = true;
-
-				// obliczenie ile dotychczasowej drogi miedzy dwoma polami przebyla jednostka
-				moved_ += (float)(e.UpdateTime * MoveSpeed * Location.MoveSpeed);
-
-				// obliczenie na tej podstawei pozycji na mapie
-				ScreenPosition = new Vector2f((float)Lerp(Location.Center.X, GoToField.Center.X, moved_),
-											  (float)Lerp(Location.Center.Y, GoToField.Center.Y, moved_));
-
-				// jesli przebyla cala droge zmiana jej lokacji
-				if ( moved_ >= 1.0f ) { Location = GoToField; }
-			}
-
-			if ( GoToField == Location ) {
-				path_ = null;
-				GoToField = null;
-				IsMoveing = false;
-				isOnfield_ = true;
-				moved_ = 0.0f;
-			}
+			if ( (counter_ == 0)) Go(e.UpdateTime, true);
 
 		}
-
-		/// <summary>
-		/// Funkcja transformujaca tekture tak, zeby jej punkt Origin byl w srodku
-		/// </summary>
-		/// <param name="tex">Tekstura ktora trzeba przetransformowac</param>
-		protected override Sprite TransformTexture(Sprite tex) {
-			base.TransformTexture(tex);
-			if ( GoToField != null ) {
-				tex.Position += new Vector2f((float)Lerp(tex.Position.X, GoToField.Center.X, moved_),
-											 (float)Lerp(tex.Position.Y, GoToField.Center.Y, moved_));
-			}
-			return tex;
-		}
-
+		
 		/// <summary>
 		/// Tekstura jaka ma być wyświetlana na ekranie
 		/// </summary>
@@ -94,20 +52,6 @@
 			get { return Texture.Position; }
 			set { Texture.Position = value; }
 		}
-
-		/// <summary>
-		/// Pole do ktorego zwierze stara sie dostac
-		/// </summary>
-		public MapField GoToField { get; set; }
-
-		/// <summary>
-		/// Zraca czy zwierze obecnie sie porusza czy nie
-		/// </summary>
-		public bool IsMoveing { get; private set; } = false;
-
-		private IList<MapField> path_;
-
-		private float moved_;
 
 		private Sprite texture_;
 
@@ -161,7 +105,6 @@
 			}
 		}
 
-		private bool isOnfield_ = true;
 		private uint counter_;
 	}
 }

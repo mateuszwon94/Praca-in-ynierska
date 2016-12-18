@@ -4,12 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using PracaInzynierska.Events;
-using PracaInzynierska.Exceptions;
 using PracaInzynierska.Textures;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
-using PracaInzynierska.Beeings;
 
 namespace PracaInzynierska.Map {
 
@@ -164,8 +162,8 @@ namespace PracaInzynierska.Map {
 		private void MoveMap(MapMovedEventArgs e) {
 			EventHandler<MapMovedEventArgs> handler = MapMoved;
 
-			if ( (handler != null) && ((Math.Abs(e.dx) > 1E-10f) || (Math.Abs(e.dy) > 1E-10f)) ) {
-				handler(this, e);
+			if ( ((Math.Abs(e.dx) > 1E-10f) || (Math.Abs(e.dy) > 1E-10f)) ) {
+				handler?.Invoke(this, e);
 			}
 		}
 

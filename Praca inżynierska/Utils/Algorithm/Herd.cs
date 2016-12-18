@@ -2,23 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PracaInzynierska.Events;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Map;
 using SFML.Graphics;
 using SFML.System;
 using PracaInzynierska.Utils.Interfaces;
-using SFML.Window;
-using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
 using static PracaInzynierska.Beeings.Beeing;
 using static System.Math;
+using PracaInzynierska.Beeings;
+using PracaInzynierska.Utils.FuzzyLogic.Variables;
 
 namespace PracaInzynierska.Utils.Algorithm {
-	using Beeings;
-	using Map = Map.Map;
 
 	/// <summary>
 	/// Klasa zarzadzajaca pojedynczym stadem.
@@ -45,10 +41,14 @@ namespace PracaInzynierska.Utils.Algorithm {
 				} while ( (mapField == null) || !mapField.IsAvaliable || mapField.IsSomethingOn );
 
 				herd_.Add(new Animal() {
-					MoveSpeed = 1,
-					Location = mapField,
-					Texture = new Sprite(AnimalTexture),
-				});
+										   MoveSpeed = 1,
+										   Location = mapField,
+										   Texture = new Sprite(AnimalTexture),
+										   HP = new FuzzyHP(30f) {
+																	 MaxHP = 30f
+																 },
+										   Strength = 6f,
+									   });
 			}
 		}
 
@@ -148,10 +148,10 @@ namespace PracaInzynierska.Utils.Algorithm {
 			}
 
 			// obliczenie nowego centrum stada
-			Recenter((Map)sender);
+			Recenter((Map.Map)sender);
 		}
 
-		private void Recenter(Map map) {
+		private void Recenter(Map.Map map) {
 			Vector2f center = herd_.Aggregate(new Vector2f(0, 0),
 											  (vec, animal) => vec = new Vector2f(animal.Location.MapPosition.X, animal.Location.MapPosition.Y));
 

@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace PracaInzynierska.Utils.Math {
+﻿namespace PracaInzynierska.Utils {
 
 	public static class Math {
 
@@ -17,6 +15,11 @@ namespace PracaInzynierska.Utils.Math {
 			if ( amount < 0 ) amount = 0;
 			else if ( amount > 1 ) amount = 1;
 			return addFrom ? from + (to - from) * amount : (to - from) * amount;
+		}
+
+		public static (double a, double b) LinearFactors(double x1, double y1, double x2, double y2) {
+			double a = (x1 - x2) / (y1 - y2);
+			return (a, y1 / (a * x1));
 		}
 	}
 }

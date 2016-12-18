@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SFML;
-using SFML.Audio;
 using SFML.Graphics;
 using SFML.System;
-using SFML.Window;
 
 namespace PracaInzynierska.Textures {
 
@@ -77,19 +71,24 @@ namespace PracaInzynierska.Textures {
 		}
 
 		public static Texture GenerateConstructTexture(uint screenSizeX, uint screenSizeY, Color color) {
-			RenderTexture renderTexture = new RenderTexture(screenSizeX, screenSizeY);
-			renderTexture.Clear(Color.Transparent);
-			RectangleShape rect = new RectangleShape(new Vector2f(screenSizeX, screenSizeY)) {
-									  FillColor = color,
-									  Position = new Vector2f(1, 1),
-									  OutlineThickness = 1,
-									  OutlineColor = Color.Black,
-								  };
-			renderTexture.Draw(rect);
-			return new Texture(renderTexture.Texture) {
-				Smooth = true
-			};
+			if ( !textures_.Keys.Contains(color) ) {
+				RenderTexture renderTexture = new RenderTexture(screenSizeX, screenSizeY);
+				renderTexture.Clear(Color.Transparent);
+				RectangleShape rect = new RectangleShape(new Vector2f(screenSizeX, screenSizeY)) {
+																									 FillColor = color,
+																									 Position = new Vector2f(1, 1),
+																									 OutlineThickness = 1,
+																									 OutlineColor = Color.Black,
+																								 };
+				renderTexture.Draw(rect);
+				textures_[color] = new Texture(renderTexture.Texture) {
+																		  Smooth = true
+																	  };
+			}
+			return textures_[color];
 		}
+
+		private static Dictionary<Color,Texture> textures_ = new Dictionary<Color, Texture>();
 
 		#endregion
 

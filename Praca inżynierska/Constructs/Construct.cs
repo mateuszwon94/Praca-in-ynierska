@@ -1,46 +1,25 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using PracaInzynierska.Map;
-using PracaInzynierska.UserInterface;
-using PracaInzynierska.UserInterface.Controls;
-using SFML;
-using SFML.Audio;
 using SFML.Graphics;
 using SFML.System;
-using SFML.Window;
-using static System.Console;
-using PracaInzynierska.Textures;
 using PracaInzynierska.Exceptions;
-using PracaInzynierska.Utils.Algorithm;
-using static PracaInzynierska.Beeings.Men;
-using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
+using static PracaInzynierska.Utils.Math;
 
-namespace PracaInzynierska.Constructs {
-	using Beeings;
-
-	public class Construct : Drawable {
-		public Construct(uint x, uint y, Color color) {
+namespace PracaInzynierska.Constructs
+{
+	public partial class Construct : Drawable {
+		public Construct(uint x, uint y, MapField baseField, Color color) {
 			Size = new Vector2u(x, y);
-			color_ = color;
 			Location = new MapFieldList(this);
-			SetTextureFromColor();
-		}
-
-		public Construct(Vector2u size, Color color) {
-			Size = size;
+			BaseField = baseField;
 			color_ = color;
-			Location = new MapFieldList(this);
+			newColor_ = color;
 			SetTextureFromColor();
+			BuildJob = new ConstructingJob(this);
 		}
+		
+		public ConstructingJob BuildJob { get; private set; }
 
 		/// <summary>
 		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
@@ -68,11 +47,11 @@ namespace PracaInzynierska.Constructs {
 		/// </summary>
 		public Sprite Texture {
 			get {
-				if ( Status == State.Planned ) return PlannedTexture;
-				if ( Status == State.UnderConstruction ) return UnderConstructionTexture;
-				if ( Status == State.Done ) return DoneTexture;
+				if ( State == Status.Planned ) return PlannedTexture;
+				if ( State == Status.UnderConstruction ) return UnderConstructionTexture;
+				if ( State == Status.Done ) return DoneTexture;
 
-				throw new ArgumentOutOfRangeException(nameof(Status), Status, "Status is out of range");
+				throw new ArgumentOutOfRangeException(nameof(State), State, "State is out of range");
 			}
 		}
 
@@ -102,7 +81,14 @@ namespace PracaInzynierska.Constructs {
 							  .Min();
 			tex.Position = new Vector2f(x, y);
 		}*/
-		public State Status { get; set; } = State.Planned;
+		public Status State {
+			get {
+				if ( ConstructPoints <= 0 ) return Status.Planned;
+				if ( ConstructPoints >= MaxConstructPoints ) return Status.Done;
+
+				return Status.UnderConstruction;
+			}
+		}
 
 		public int WorkUnit { get; set; } = -1;
 
@@ -111,6 +97,21 @@ namespace PracaInzynierska.Constructs {
 		/// </summary>
 		public bool IsSelected { get; set; } = false;
 
+		public float ConstructPoints {
+			get { return constructPoints_; }
+			set {
+				constructPoints_ = value;
+				lastColor_ = newColor_;
+				newColor_ = new Color(color_.R, color_.G, color_.B, (byte)Lerp(50d, 255d, value / MaxConstructPoints));
+				if ( lastColor_?.A != newColor_?.A )
+					UnderConstructionTexture =
+							new Sprite(GenerateConstructTexture((uint)MapField.ScreenSize * Size.X,
+																(uint)MapField.ScreenSize * Size.Y,
+																(Color)newColor_));
+			}
+		}
+
+		public int MaxConstructPoints { get; set; }
 		/// <summary>
 		/// Zwraca pole na mapie, na ktorym znajduje sie dane stworzenie
 		/// </summary>
@@ -133,18 +134,25 @@ namespace PracaInzynierska.Constructs {
 					}
 				}
 
-				DoneTexture = DoneTexture;
-				PlannedTexture = PlannedTexture;
-				UnderConstructionTexture = UnderConstructionTexture;
+				baseField_ = value;
 			}
 		}
+
+		public string Name { get; set; }
 
 		public Vector2u Size { get; private set; }
 
 		/// <summary>
 		/// Zwraca pozucje na ekranie danego stworzenia
 		/// </summary>
-		public Vector2f ScreenPosition { get; set; }
+		public Vector2f ScreenPosition {
+			get { return Texture.Position; }
+			set {
+				PlannedTexture.Position = value;
+				UnderConstructionTexture.Position = value;
+				DoneTexture.Position = value;
+			}
+		}
 
 		/// <summary>
 		/// Zwraca rozmiar tekstury
@@ -164,37 +172,11 @@ namespace PracaInzynierska.Constructs {
 				target.Draw(Texture, states);
 			}
 		}
-		
+
 		protected static readonly Random rand_ = new Random();
 		private MapField baseField_;
 
-		public class MapFieldList {
-			internal MapFieldList(Construct c) { parent_ = c; }
-
-			public int Count => list_.Count;
-
-			public void Add(MapField field) {
-				list_.Add(field);
-				field.ConstructOn = parent_;
-			}
-
-			public void Remove(MapField field) {
-				list_.Remove(field);
-				field.ConstructOn = null;
-			}
-
-			public void Clear() {
-				foreach ( MapField field in list_ ) {
-					field.ConstructOn = null;
-				}
-				list_.Clear();
-			}
-
-			private readonly Construct parent_;
-			private readonly List<MapField> list_ = new List<MapField>();
-		}
-
-		public enum State {
+		public enum Status {
 			Planned = 0,
 			UnderConstruction = 1,
 			Done = 2,
@@ -204,17 +186,13 @@ namespace PracaInzynierska.Constructs {
 		private Sprite plannedTexture_;
 		private Sprite underConstructionTexture_;
 		private Sprite doneTexture_;
+		private float constructPoints_ = 0f;
 
-		private void SetTextureFromColor() {
-			PlannedTexture =
-					new Sprite(GenerateConstructTexture((uint)MapField.ScreenSize * Size.X,
-														(uint)MapField.ScreenSize * Size.Y,
-														new Color(color_.R, color_.G, color_.B, 75)));
-
-			UnderConstructionTexture =
-					new Sprite(GenerateConstructTexture((uint)MapField.ScreenSize * Size.X,
-														(uint)MapField.ScreenSize * Size.Y,
-														new Color(color_.R, color_.G, color_.B, 200)));
+		public void SetTextureFromColor() {
+			PlannedTexture = UnderConstructionTexture =
+									 new Sprite(GenerateConstructTexture((uint)MapField.ScreenSize * Size.X,
+																		 (uint)MapField.ScreenSize * Size.Y,
+																		 new Color(color_.R, color_.G, color_.B, 50)));
 
 			DoneTexture =
 					new Sprite(GenerateConstructTexture((uint)MapField.ScreenSize * Size.X,
@@ -222,10 +200,11 @@ namespace PracaInzynierska.Constructs {
 														new Color(color_.R, color_.G, color_.B, 255)));
 		}
 
-
+		private Color? lastColor_ = null;
+		private Color? newColor_ = null;
 
 		private Sprite TransformTexture(Sprite tex) {
-			if ( BaseField != null ) tex.Position = BaseField.ScreenPosition;
+			tex.Position = BaseField.ScreenPosition;
 			return tex;
 		}
 	}

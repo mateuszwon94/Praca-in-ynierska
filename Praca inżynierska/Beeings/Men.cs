@@ -1,20 +1,41 @@
-﻿namespace PracaInzynierska.Beeings {
-	using System;
-	using Events;
-	using Map;
-	using SFML.Graphics;
-	using SFML.System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using PracaInzynierska.Events;
+using PracaInzynierska.Events.Job;
+using PracaInzynierska.Map;
+using PracaInzynierska.Utils;
+using PracaInzynierska.Utils.FuzzyLogic.Variables;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using static System.Math;
+using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
+
+namespace PracaInzynierska.Beeings {
 
 	/// <summary>
 	/// Klasa odpowiadajaca za ludzi
 	/// </summary>
 	public class Men : Beeing {
-		public Men() {
+		public Men() : base() {
+			heuristic_ = EuclideanDistance;
+
 			MouseButtonReleased += (o, e) => {
-				if ( IsSelected ) IsSelected = false;
-				else IsSelected = true;
-			};
+									   if ( IsSelected ) IsSelected = false;
+									   else IsSelected = true;
+								   };
 		}
+
+		public string Name { get; set; }
+
+		public Job Job { get; set; }
+
+		public float Constructing { get; set; }
+		public float Mining { get; set; }
+		public float Accuracy { get; set; }
+
+		public FuzzyLaziness Laziness { get; set; }
 
 		/// <summary>
 		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
@@ -27,7 +48,7 @@
                 Vector2f pos = new Vector2f(x, y) - Location.ScreenPosition;
                 Vector2f center = Location.Center - Location.ScreenPosition;
 
-                if ( Math.Pow(center.X - pos.X, 2) + Math.Pow(center.Y - pos.Y, 2) <= Math.Pow(MapField.ScreenSize, 2) ) return true;
+                if ( Pow(center.X - pos.X, 2) + Pow(center.Y - pos.Y, 2) <= Pow(MapField.ScreenSize, 2) ) return true;
             }
             return false;
         }
@@ -74,14 +95,63 @@
 			}
 		}
 
+		public Colony Colony { get; set; }
+
 		/// <summary>
 		/// Funkcja wywoływana przy kazdym odswierzeniu okranu
 		/// </summary>
 		/// <param name="sender">Obiekt wysylajacy zdazenie</param>
 		/// <param name="e">Argumenty zdarzenia</param>
 		public override void UpdateTime(object sender, UpdateEventArgs e) {
-            if ( IsSelected ) { }
-        }
+			//if ( IsSelected ) { }
+			if ( Job != null ) {
+				if ( Job.Location.All(field => !field.IsAvaliable) ) {
+					Colony.JobQueue.Enqueue(Job, 3f);
+					Job = null;
+				} else if ( Job.State == Job.Status.Done ) {
+					Job = null;
+					Console.WriteLine("BuildJob DONE!");
+				} else if ( !Job.IsInLocation(Location) ) {
+					if ( GoToField == null ) GoToField = Closest(Job.Location);
+					Go(e.UpdateTime);
+				} else { Job.Work(this, new ConstructingJobEventArgs((float)e.UpdateTime * Constructing)); }
+			}
+		}
+
+		private MapField Closest(IEnumerable<MapField> listFields) {
+			MapField closestField = null;
+			float minDist = float.PositiveInfinity;
+			foreach ( MapField field in listFields ) {
+				float cur = MapField.Distance(Location, field);
+				if ( cur < minDist ) {
+					minDist = cur;
+					closestField = field;
+				}
+			}
+			return closestField;
+		}
+
+		/// <summary>
+		/// Funkcja wywoływana przez zdazrenie puszczenia klawisza myszy
+		/// </summary>
+		/// <param name="sender">obiekt wysylajacy zdarzenie</param>
+		/// <param name="e">argumenty zdarzenia</param>
+		public override void Window_MouseButtonReleased(object sender, MouseButtonEventArgs e) {
+			base.Window_MouseButtonReleased(sender, e);
+
+			if ( IsSelected && e.Button == Mouse.Button.Right ) {
+				MapField mapField = Program.map[0, 0];
+
+				int X = (int)(e.X + mapField.ScreenPosition.X) / MapField.ScreenSize,
+					Y = (int)(e.Y + mapField.ScreenPosition.Y) / MapField.ScreenSize;
+
+				if ( Program.map[X, Y].ConstructOn != null ) { Job = Program.map[X, Y].ConstructOn.BuildJob; }
+			}
+		}
+
+		/// <summary>Returns a string that represents the current object.</summary>
+		/// <returns>A string that represents the current object.</returns>
+		public override string ToString() { return $"{Name} [HP - {HP}]"; }
 
 		private Sprite textureSelected_;
 		private Sprite textureNotSelected_;

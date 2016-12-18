@@ -5,6 +5,8 @@ namespace PracaInzynierska.Utils.Algorithm {
 	public static partial class PathFinding {
 		public static class Metric {
 
+			public delegate float heuristicFunc(MapField from, MapField to);
+
 			/// <summary>
 			/// Odleglosc w metryce euklidesowej miedzy dwoma polami mapy.
 			/// </summary>

@@ -1,16 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using PracaInzynierska.Events;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Textures;
 using SFML.Graphics;
 using SFML.System;
+using PracaInzynierska.Beeings;
+using PracaInzynierska.Constructs;
 using static System.Math;
-using System;
 
 namespace PracaInzynierska.Map {
-	using Beeings;
-	using Constructs;
 
 	/// <summary>
     /// Klasa reprezentujaca pole mapy
@@ -155,16 +153,18 @@ namespace PracaInzynierska.Map {
         /// </summary>
         public bool IsSomethingOn => OnField.Count > 0;
 
-        /// <summary>
-        /// Zwraca jednostke stojaca na danym polu.
-        /// <exception cref="FieldIsNotEmptyException">Jesli jest proba przypisania wartosc, a na polu jest juz jakas jednostka wyrzuci wyjatek</exception>
-        /// </summary>
-        public List<Beeing> OnField { get; } = new List<Beeing>();
+		public bool IsConstructOn => (ConstructOn == null || ConstructOn.State != Construct.Status.Done);
+
+		/// <summary>
+		/// Zwraca jednostke stojaca na danym polu.
+		/// <exception cref="FieldIsNotEmptyException">Jesli jest proba przypisania wartosc, a na polu jest juz jakas jednostka wyrzuci wyjatek</exception>
+		/// </summary>
+		public List<Beeing> OnField { get; } = new List<Beeing>();
 
 		/// <summary>
 		/// Zwraca wartosc 'true' jesli istnieje mozliwosc przejscia przez to pole.
 		/// </summary>
-		public bool IsAvaliable => MoveSpeed > 0.0 && (ConstructOn == null || ConstructOn?.Status != Construct.State.Done);
+		public bool IsAvaliable => MoveSpeed > 0.0 && IsConstructOn;
 
 		public Construct ConstructOn { get; set; }
 
@@ -189,7 +189,8 @@ namespace PracaInzynierska.Map {
 			}
 
 	        if ( ConstructOn != null && ConstructOn.BaseField == this ) {
-		        //ConstructOn.Status
+				ConstructOn.SetTextureFromColor();
+				ConstructOn.ScreenPosition = ScreenPosition;
 	        }
         }
 
@@ -203,11 +204,18 @@ namespace PracaInzynierska.Map {
 
             if ( IsSomethingOn ) {
 	            foreach ( Beeing beeing in OnField ) {
-		            beeing.ScreenPosition = Center;
-				}
+		            if ( beeing is Animal a ) {
+			            a.Texture = new Sprite(MapTextures.AnimalTexture);
+		            } else if ( beeing is Men m ) {
+			            m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
+			            m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
+		            }
+	            }
             }
 
-	        if ( ConstructOn != null && ConstructOn.BaseField == this ) { ConstructOn.ScreenPosition = ScreenPosition; }
+	        if ( ConstructOn != null && ConstructOn.BaseField == this ) {
+				ConstructOn.ScreenPosition = ScreenPosition;
+	        }
         }
 
         #endregion EventHandlers
@@ -275,11 +283,18 @@ namespace PracaInzynierska.Map {
         /// <returns>Zwraca string bedacy reprezentacja pola</returns>
         public override string ToString() => $"Pos [{MapPosition.X}, {MapPosition.Y}]\tVal {FieldSeed}";
 
-        #endregion Funcs
+		public static float Distance(MapField from, MapField to) {
+			return (float)Round(Sqrt((from.MapPosition.X - to.MapPosition.X) *
+									 (from.MapPosition.X - to.MapPosition.X) +
+									 (from.MapPosition.Y - to.MapPosition.Y) *
+									 (from.MapPosition.Y - to.MapPosition.Y)), 4);
+		}
 
-        #region PrivateVars
+		#endregion Funcs
 
-        private MapSeed.Value fieldSeed_;
+		#region PrivateVars
+
+		private MapSeed.Value fieldSeed_;
         private readonly PracaInzynierska.Map.Map map_;
 		private double moveSpeed_;
 

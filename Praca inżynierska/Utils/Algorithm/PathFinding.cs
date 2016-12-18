@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using PracaInzynierska.Exceptions;
 using PracaInzynierska.Map;
-using System.Threading;
 using System.Threading.Tasks;
-using static System.Math;
+using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
 
 namespace PracaInzynierska.Utils.Algorithm {
-	using static PathFinding.Metric;
 
 	public static partial class PathFinding {
 		/// <summary>
@@ -19,10 +17,10 @@ namespace PracaInzynierska.Utils.Algorithm {
 		/// <param name="heuristic">Metryka w jakiej maja byc szacowana odleglosc do pola docelowego</param>
 		/// <param name="forbidenFields">Pola przez które nie wolno przejść przy danym poszukiwaniu ścieżki</param>
 		/// <returns>Lista pol skladajaca sie na sciezke</returns>
-		public static IList<MapField> AStar(MapField from, MapField to, Func<MapField, MapField, float> heuristic, params MapField[] forbidenFields) {
+		public static IList<MapField> AStar(MapField from, MapField to, heuristicFunc heuristic, params MapField[] forbidenFields) {
 		    if ( (from == null) || (to == null) ) throw new NullReferenceException();			                     // ktores z pol nie istnieje
 			if ( !to.IsAvaliable ) throw new FieldNotAvaliableException();					            	         // pole jest niedostepne
-			if ( from.Neighbour.Any(neighbour => neighbour == to) ) return new List<MapField>(2) { from, to, };      // pola from i to leza kolo siebie
+			if ( from.Neighbour.Contains(to) ) return new List<MapField>(2) { from, to, };                           // pola from i to leza kolo siebie
 
 			//Lita pol do przeszukania
 	        List<PathFindingNode> openList = new List<PathFindingNode> {
@@ -38,11 +36,9 @@ namespace PracaInzynierska.Utils.Algorithm {
 				PathFindingNode current = openList.RemoveAtAndGet(0);
 				closeList.Add(current);
 
-				if ( current.This == to ) {
+				if ( current.This == to ) { // znaleziono pole do ktorego dazylismy
 			        achivewedGoal = true;
-		        } // znaleziono pole do ktorego dazylismy
-
-		        if ( achivewedGoal ) {
+		        } else if ( achivewedGoal ) {
 			        PathFindingNode endNode = openList.Concat(closeList)
 													  .First(node => node.This == to);
 
@@ -126,17 +122,13 @@ namespace PracaInzynierska.Utils.Algorithm {
 		private class PathFindingNode : IComparable<PathFindingNode> {
 			internal PathFindingNode(MapField This) {
 				this.This = This;
-				Parent = null;
-
-				CostFromStart = 0f;
-				CostToEnd = float.MinValue;
 			}
 
 			public MapField This { get; }
-			public PathFindingNode Parent { get; set; }
+			public PathFindingNode Parent { get; set; } = null;
 
-			public float CostFromStart { get; set; }
-			public float CostToEnd { get; set; }
+			public float CostFromStart { get; set; } = 0f;
+			public float CostToEnd { get; set; } = float.MinValue;
 
 			public float AllCost => CostFromStart + CostToEnd;
 
