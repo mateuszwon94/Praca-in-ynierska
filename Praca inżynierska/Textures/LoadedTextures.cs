@@ -21,9 +21,13 @@ namespace PracaInzynierska.Textures {
 			SandTexture = GenerateMapTexture(screenSize, new Color(200, 200, 0));
 			RockTexture = GenerateMapTexture(screenSize, new Color(127, 127, 127));
 			SelectedTexture = GenerateMapTexture(screenSize, new Color(255, 255, 255, 127));
+			OpenListTexture = GenerateMapTexture(screenSize, new Color(0, 0, 255, 127));
+			CloseListTexture = GenerateMapTexture(screenSize, new Color(255, 0, 0, 127));
+			CurrentFieldTexture = GenerateMapTexture(screenSize, new Color(Color.Magenta.R, Color.Magenta.G, Color.Magenta.B, 127));
 
 			MenTexture = GenerateBeeingTexture(screenSize, Color.Cyan);
 			MenTextureSelected = GenerateBeeingTexture(screenSize, Color.Magenta);
+			BesigerTexture = GenerateBeeingTexture(screenSize, new Color(255, 0, 0));
 			AnimalTexture = GenerateBeeingTexture(screenSize, new Color(75, 75, 255), 6);
 		}
 
@@ -128,6 +132,14 @@ namespace PracaInzynierska.Textures {
 		/// Tekstura zwierzecia.
 		/// </summary>
 		public static Texture AnimalTexture { get; private set; }
+
+		public static Texture OpenListTexture { get; private set; }
+
+		public static Texture CloseListTexture { get; private set; }
+
+		public static Texture CurrentFieldTexture { get; private set; }
+
+		public static Texture BesigerTexture { get; private set; }
 
 		#endregion
 

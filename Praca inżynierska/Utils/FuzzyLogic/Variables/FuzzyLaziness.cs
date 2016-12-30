@@ -10,17 +10,15 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 			hardWorkingFunc_ = new LeftShoulderFunc(6d, 8d);
 		}
 
-		public override float Value { get; set; }
-
 		public override int StatesCount => (int)States.HardWorking - (int)States.Lazy + 1;
 
 		public override void Fuzzify(string stateS) {
 			if ( stateS == nameof(States.Lazy) ) {
 				FuzzyValue = (float)lazyFunc_.Invoke(Value);
 				State = nameof(States.Lazy);
-			} else if ( stateS == nameof(States.Avrege) ) {
+			} else if ( stateS == nameof(States.Average) ) {
 				FuzzyValue = (float)avregeFunc_.Invoke(Value);
-				State = nameof(States.Avrege);
+				State = nameof(States.Average);
 			} else if ( stateS == nameof(States.HardWorking) ) {
 				FuzzyValue = (float)hardWorkingFunc_.Invoke(Value);
 				State = nameof(States.HardWorking);
@@ -33,8 +31,16 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 
 		public enum States {
 			Lazy = 0,
-			Avrege = 1,
+			Average = 1,
 			HardWorking = 2,
+		}
+
+		public override void Fuzzify(int stateNo) {
+			if ( stateNo >= 0 && stateNo < StatesCount ) {
+				Fuzzify(((States)stateNo).ToString());
+			} else {
+				throw new ArgumentException();
+			}
 		}
 	}
 }

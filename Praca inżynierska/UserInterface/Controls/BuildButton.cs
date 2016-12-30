@@ -11,7 +11,7 @@ using static PracaInzynierska.Textures.GUITextures;
 namespace PracaInzynierska.UserInterface.Controls {
 	class BuildButton : Button {
 
-		public BuildButton() : base() {
+		public BuildButton(Font font, RenderWindow window) : base() {
 			MouseButtonPressed += BuildButton_MouseButtonPressed;
 			new List<Button>() {
 								   new Button() {
@@ -29,7 +29,7 @@ namespace PracaInzynierska.UserInterface.Controls {
 
 		private void BuildButton_MouseButtonPressed(object sender, MouseButtonEventArgs e) {
 			if ( IsOn ) {
-				
+
 			}
 		}
 

@@ -27,12 +27,10 @@ namespace PracaInzynierska.Utils.Algorithm {
 		/// <param name="location">Pozycja wokol ktorej ma byc stworzone stado</param>
 		/// <param name="count">liczba czlonkow stada</param>
 		public Herd(MapField location, uint count) {
-			Location = location;
-
 			for ( uint i = 0 ; i < count ; ++i ) {
 				MapField mapField;
 				do { // wybieranie pozycji dla czlonka stada tak dlugo az uda sie znalezc dostepne miejsce
-					mapField = Location;
+					mapField = location;
 					int x = rand_.Next(-(int)(count / 2), (int)(count / 2) + 1);
 					int y = rand_.Next(-(int)(count / 2), (int)(count / 2) + 1);
 
@@ -44,10 +42,8 @@ namespace PracaInzynierska.Utils.Algorithm {
 										   MoveSpeed = 1,
 										   Location = mapField,
 										   Texture = new Sprite(AnimalTexture),
-										   HP = new FuzzyHP(30f) {
-																	 MaxHP = 30f
-																 },
-										   Strength = 6f,
+										   HP = new FuzzyHP(30f, 50f),
+					Strength = 6f,
 									   });
 			}
 		}
@@ -61,11 +57,6 @@ namespace PracaInzynierska.Utils.Algorithm {
 			foreach ( Animal animal in this ) { animal.Draw(target, states); }
 		}
 
-		/// <summary>
-		/// Usredniona pozycja stada.
-		/// </summary>
-		public MapField Location { get; private set; }
-
 		private List<Animal> herd_ = new List<Animal>();
 
 		/// <summary>Returns an enumerator that iterates through the collection.</summary>
@@ -76,6 +67,18 @@ namespace PracaInzynierska.Utils.Algorithm {
 		/// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
 		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 
+		public MapField Location {
+			get {
+			    Vector2f center = herd_.Aggregate(new Vector2f(0, 0),
+			                                      (current, a) =>
+			                                          current + new Vector2f(a.ExactPosition.X, a.ExactPosition.Y));
+
+				center /= herd_.Count;
+
+				return Program.map[(int)Round(center.X), (int)Round(center.Y)];
+			}
+		}
+
 		/// <summary>
 		/// Regula spojnosci w algorytmie stada. Sterowanie w kierunku uśrednionego położenia lokalnej grupy.
 		/// Spójność daje zwierzeciu możliwość grupowania się ze zwierzetami z lokalnej grupy, czyli zapobiega „rozlatywaniu” się stad.
@@ -83,13 +86,15 @@ namespace PracaInzynierska.Utils.Algorithm {
 		/// <param name="animal">Zwierze dla ktorego ma byc obliczona ta regula</param>
 		/// <returns>Wektor mowiacy w jakim kierunku na podstawie tej reguly ma sie poruzyc dane zwierze</returns>
 		private Vector2f Cohesion(Animal animal) {
-			Vector2f centerOfMass = herd_.Where(a => a != animal)
-										 .Aggregate(new Vector2f(0, 0),
-													(current, a) => current + new Vector2f(a.Location.MapPosition.X, a.Location.MapPosition.Y));
+		    Vector2f centerOfMass = herd_.Where(a => a != animal)
+		                                 .Aggregate(new Vector2f(0, 0),
+		                                            (current, a) =>
+		                                                current +
+		                                                new Vector2f(a.ExactPosition.X, a.ExactPosition.Y));
 
 			centerOfMass /= herd_.Count - 1;
 
-			Vector2f animalPos = new Vector2f(animal.Location.MapPosition.X, animal.Location.MapPosition.Y);
+			Vector2f animalPos = new Vector2f(animal.ExactPosition.X, animal.ExactPosition.Y);
 
 			return centerOfMass - animalPos;
 		}
@@ -104,8 +109,8 @@ namespace PracaInzynierska.Utils.Algorithm {
 		private Vector2f Separation(Animal animal, float minDistance) {
 			return herd_.Where(a => (a != animal) && (Distance(a, animal) < minDistance))
 						.Aggregate(new Vector2f(0, 0),
-								   (current, a) => current - new Vector2f(a.Location.MapPosition.X - animal.Location.MapPosition.X,
-																		  a.Location.MapPosition.Y - animal.Location.MapPosition.Y));
+								   (current, a) => current - new Vector2f(a.ExactPosition.X - animal.ExactPosition.X,
+																		  a.ExactPosition.Y - animal.ExactPosition.Y));
 		}
 
 		/// <summary>
@@ -126,10 +131,30 @@ namespace PracaInzynierska.Utils.Algorithm {
 		/// <param name="sender">Obiekt wysylajacy zdazenie</param>
 		/// <param name="e">Argumenty zdarzenia</param>
 		public void UpdateTime(object sender, UpdateEventArgs e) {
+			if ( counter_ == 0 ) {
+				counter_ = rand_.Next(1000, 3000);
+
+				if ( rand_.Next(2) == 1 ) {
+					pocX_ = 0;
+					konX_ = 5;
+				} else {
+					pocX_ = -5;
+					konX_ = 0;
+				}
+
+				if ( rand_.Next(2) == 1 ) {
+					pocY_ = 0;
+					konY_ = 5;
+				} else {
+					pocY_ = -5;
+					konY_ = 0;
+				}
+			}
+
 			// ALGORYTM STADA
 			foreach ( Animal animal in herd_.Where(animal => !animal.IsMoveing) ) {
 				// wyliczenie pozycji na jaka powinno poruzyc sie zwierze
-				Vector2f randVec = new Vector2f(rand_.Next(-5, 5), rand_.Next(-5, 5));
+			    Vector2f randVec = new Vector2f(rand_.Next(pocX_, konX_), rand_.Next(pocY_, konY_));
 				Vector2f moveVector = Cohesion(animal) +
 									  Separation(animal, 2f) +
 									  Alignment(animal) +
@@ -147,21 +172,14 @@ namespace PracaInzynierska.Utils.Algorithm {
 				animal.GoToField = field;
 			}
 
-			// obliczenie nowego centrum stada
-			Recenter((Map.Map)sender);
+		    --counter_;
 		}
 
-		private void Recenter(Map.Map map) {
-			Vector2f center = herd_.Aggregate(new Vector2f(0, 0),
-											  (vec, animal) => vec = new Vector2f(animal.Location.MapPosition.X, animal.Location.MapPosition.Y));
-
-			center /= herd_.Count;
-
-			int centerX = (int)Round(center.X);
-			int centerY = (int)Round(center.Y);
-
-			Location = map[centerX, centerY];
-		}
+	    private int pocX_,
+	                pocY_,
+	                konX_,
+	                konY_;
+	    private int counter_;
 
 		protected static readonly Random rand_ = new Random();
 	}

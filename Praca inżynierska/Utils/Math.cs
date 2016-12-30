@@ -1,4 +1,7 @@
-﻿namespace PracaInzynierska.Utils {
+﻿using SFML.System;
+using static System.Math;
+
+namespace PracaInzynierska.Utils {
 
 	public static class Math {
 
@@ -18,8 +21,12 @@
 		}
 
 		public static (double a, double b) LinearFactors(double x1, double y1, double x2, double y2) {
-			double a = (x1 - x2) / (y1 - y2);
-			return (a, y1 / (a * x1));
+			double a = (y1 - y2) / (x1 - x2);
+			double b = a * x1 - y1;
+
+			return (a, b);
 		}
+
+		public static double Length(Vector2f vec) => Sqrt(vec.X * vec.X + vec.Y * vec.Y);
 	}
 }

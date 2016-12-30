@@ -1,22 +1,21 @@
-﻿using PracaInzynierska.Exceptions;
+﻿using System.Collections.Generic;
+using PracaInzynierska.Exceptions;
 using static System.Math;
 
 namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 	public abstract class FuzzyVariable {
+		protected FuzzyVariable() { }
+
 		public FuzzyVariable(float value) { Value = value; }
 
-		public virtual float Value {
-			get { return value_; }
-			set {
-				value_ = value;
-				Fuzzify(State);
-			}
-		}
+		public virtual float Value { get; set; }
 
 		public float FuzzyValue {
 			get {
 				if ( State == null ) throw new VariableNotFuzzifiedException();
-				else return fuzzyVar_;
+
+				State = null;
+				return fuzzyVar_;
 			}
 			protected set { fuzzyVar_ = value; }
 		}
@@ -25,9 +24,11 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 
 		public abstract int StatesCount { get; }
 
-		public static implicit operator float(FuzzyVariable fuzzy) { return fuzzy.Value; }
-
 		public abstract void Fuzzify(string state);
+
+		public abstract void Fuzzify(int stateNo);
+
+		public static implicit operator float(FuzzyVariable fuzzy) => fuzzy.Value;
 
 		public static float And(float first, float second) => Min(first, second);
 
@@ -35,7 +36,18 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 
 		public static float Not(float val) => 1f - val;
 
+		public static bool operator ==(FuzzyVariable one, FuzzyVariable two) {
+			if ( ReferenceEquals(one, null) || ReferenceEquals(two, null) ) return false;
+
+			return one.Value == two.Value;
+		}
+
+		public static bool operator !=(FuzzyVariable one, FuzzyVariable two) {
+			if ( ReferenceEquals(one, null) || ReferenceEquals(two, null) ) return false;
+
+			return one.Value != two.Value;
+		}
+
 		private float fuzzyVar_;
-		private float value_;
 	}
 }

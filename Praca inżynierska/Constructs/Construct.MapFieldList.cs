@@ -31,15 +31,11 @@ namespace PracaInzynierska.Constructs
 
 			/// <summary>Returns an enumerator that iterates through a collection.</summary>
 			/// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
-			IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 			/// <summary>Returns an enumerator that iterates through the collection.</summary>
 			/// <returns>An enumerator that can be used to iterate through the collection.</returns>
-			public IEnumerator<MapField> GetEnumerator() { return list_.GetEnumerator(); }
-
-			public MapField this[int x] {
-				get { return list_[x]; }
-			}
+			public IEnumerator<MapField> GetEnumerator() => list_.GetEnumerator();
 
 			private readonly Construct parent_;
 			private readonly List<MapField> list_ = new List<MapField>();

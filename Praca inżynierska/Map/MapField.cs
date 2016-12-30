@@ -164,7 +164,7 @@ namespace PracaInzynierska.Map {
 		/// <summary>
 		/// Zwraca wartosc 'true' jesli istnieje mozliwosc przejscia przez to pole.
 		/// </summary>
-		public bool IsAvaliable => MoveSpeed > 0.0 && IsConstructOn;
+		public bool IsAvaliable => MoveSpeed > 0.0 && (IsConstructOn && !(ConstructOn is Bed));
 
 		public Construct ConstructOn { get; set; }
 

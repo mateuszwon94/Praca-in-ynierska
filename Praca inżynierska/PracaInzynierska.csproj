@@ -78,6 +78,59 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test|AnyCPU'">
+    <OutputPath>bin\Test\</OutputPath>
+    <DefineConstants>TRACE;__DEMO__,__DEMO_EXPERIMENTAL__,TEST</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Release\PracaInzynierska.xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test|x64'">
+    <OutputPath>bin\x64\Test\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test|x86'">
+    <OutputPath>bin\x86\Test\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TestDebug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\TestDebug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;__DEMO__,__DEMO_EXPERIMENTAL__,TEST</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TestDebug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\TestDebug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TestDebug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\TestDebug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Priority Queue, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\OptimizedPriorityQueue.4.0.0\lib\net45\Priority Queue.dll</HintPath>
@@ -118,12 +171,15 @@
   <ItemGroup>
     <Compile Include="Beeings\Animal.cs" />
     <Compile Include="Beeings\Beeing.cs" />
+    <Compile Include="Beeings\Men.AttackJob.cs" />
     <Compile Include="Beeings\Men.cs" />
+    <Compile Include="Beeings\Men.FleeJob.cs" />
+    <Compile Include="Beeings\Men.RestJon.cs" />
+    <Compile Include="Constructs\Bed.cs" />
     <Compile Include="Constructs\Construct.ConstructingJob.cs" />
     <Compile Include="Constructs\Construct.cs" />
     <Compile Include="Constructs\Construct.MapFieldList.cs" />
     <Compile Include="Constructs\ConstructGenerator.cs" />
-    <Compile Include="Events\Job\ConstructingJobEventArgs.cs" />
     <Compile Include="Events\Job\JobEventArgs.cs" />
     <Compile Include="Events\MapMovedEventArgs.cs" />
     <Compile Include="Events\MapResizedEventArgs.cs" />
@@ -133,6 +189,7 @@
     <Compile Include="Exceptions\FieldIsNotEmptyException.cs" />
     <Compile Include="Exceptions\VariableNotFuzzified.cs" />
     <Compile Include="Map\MapField.FieldNeighvours.cs" />
+    <Compile Include="UserInterface\Controls\BuildButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
     <Compile Include="UserInterface\GUI.cs" />
     <Compile Include="UserInterface\GUIElement.cs" />
@@ -150,18 +207,24 @@
     <Compile Include="Events\UpdateEventArgs.cs" />
     <Compile Include="Exceptions\FieldNotAvaliableException.cs" />
     <Compile Include="Utils\Algorithm\Herd.cs" />
+    <Compile Include="Utils\Besiegers.cs" />
     <Compile Include="Utils\Colony.cs" />
+    <Compile Include="Utils\Diagnostic\AStarDiagnostic.cs" />
+    <Compile Include="Utils\Diagnostic\PathFinding.cs" />
     <Compile Include="Utils\FuzzyLogic\FAM.cs" />
     <Compile Include="Utils\FuzzyLogic\Func\LeftShoulderFunc.cs" />
     <Compile Include="Utils\FuzzyLogic\Func\RightShoulderFunc.cs" />
     <Compile Include="Utils\FuzzyLogic\Func\TraingularFunc.cs" />
     <Compile Include="Utils\FuzzyLogic\Func\TrapezoidFunc.cs" />
+    <Compile Include="Utils\FuzzyLogic\Variables\FuzzyFatigue.cs" />
+    <Compile Include="Utils\FuzzyLogic\Variables\FuzzyMorale.cs" />
     <Compile Include="Utils\FuzzyLogic\Variables\FuzzyLaziness.cs" />
     <Compile Include="Utils\FuzzyLogic\Variables\FuzzyHP.cs" />
     <Compile Include="Utils\FuzzyLogic\Variables\FuzzyVariable.cs" />
     <Compile Include="Utils\Interfaces\IInvocable.cs" />
     <Compile Include="Utils\Interfaces\IUpdateTime.cs" />
-    <Compile Include="Utils\Job.cs" />
+    <Compile Include="Utils\Jobs\Job.cs" />
+    <Compile Include="Utils\Jobs\SleepJob.cs" />
     <Compile Include="Utils\Math.cs" />
     <Compile Include="Utils\Algorithm\PathFinding.cs" />
     <Compile Include="Utils\Algorithm\PathFinding.Metric.cs" />
@@ -206,21 +269,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="openal32.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Textures\button.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Textures\grass.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Textures\K.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Textures\rock.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Textures\sand.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

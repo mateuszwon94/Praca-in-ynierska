@@ -22,7 +22,9 @@ namespace PracaInzynierska.Map {
 	    /// </summary>
 	    /// <param name="size">Rozmiar planszy</param>
 	    /// <param name="mapSeed">Okresla proporcje w występowaniu terenu</param>
-	    public Map(int size, MapSeed mapSeed) {
+	    public Map(int size, MapSeed mapSeed, int? randSeed = null) {
+		    rand = randSeed != null ? new Random((int)randSeed) : new Random();
+
 			//Wygenerowanie tekstur pol planszy
 			MapTextures.GenerateAll((uint)MapField.ScreenSize);
 
@@ -33,7 +35,9 @@ namespace PracaInzynierska.Map {
 			Vector2i[] posList = new Vector2i[mapSeed.Count];
 
 			//Inicjalizacja startowyxh ziaren na mapie
-			Console.WriteLine("Initalizing seeds.");
+#if !TEST
+		    Console.WriteLine("Initalizing seeds.");
+#endif
 			for ( int i = 0 ; i < mapSeed.Count ; ++i ) {
 				try {
                     ref Vector2i pos = ref posList[i];
@@ -44,7 +48,9 @@ namespace PracaInzynierska.Map {
 					mapSeedValue[pos.X, pos.Y] = mapSeed[i];
 				} catch { Console.WriteLine("Error!"); }
 			}
+#if !TEST
 			Console.WriteLine("Start seeds initialized.");
+#endif
 
 			//Wygenerowanie tablicy ziaren na podstawie startowych ziaren
 			Parallel.For(0, Size, i => {
@@ -65,10 +71,14 @@ namespace PracaInzynierska.Map {
 					} catch { Console.WriteLine("Error!"); }
 				});
 			});
+#if !TEST
 			Console.WriteLine("Seeds initialized.");
+#endif
 
 			//Stworzenie pustego kontenera pol mapy
+#if !TEST
 			Console.WriteLine("Initalizing map fields.");
+#endif
 			Grid = new List<List<MapField>>(Size);
 
 			for ( int i = 0 ; i < size ; ++i ) {
@@ -88,7 +98,9 @@ namespace PracaInzynierska.Map {
 					} catch ( Exception ex ) { Console.WriteLine(ex.StackTrace); }
 				});
 			});
+#if !TEST
 			Console.WriteLine("Map fields initialized.");
+#endif
 		}
 
         #endregion Constructors
@@ -98,7 +110,7 @@ namespace PracaInzynierska.Map {
         /// <summary>
         /// Event uruchamiany przy odswierzaniu mapy
         /// </summary>
-        public event EventHandler<UpdateEventArgs> UpdateTime;
+        public event EventHandler<UpdateEventArgs> UpdateTimeEvent;
 
         /// <summary>
         /// Funkcja wywołująca event odswiezania mapy
@@ -118,18 +130,9 @@ namespace PracaInzynierska.Map {
         /// <param name="target">Cel, na ktorym jest rysowana</param>
         /// <param name="states">Stan</param>
         public void Draw(RenderTarget target, RenderStates states) {
-	       // List<Drawable> drawables = new List<Drawable>(Size * Size * 2);
 	        foreach ( MapField field in this.Where(field => field.IsFieldSeed && field.IsInsideWindows()) ) {
 		        target.Draw(field, states);
-		        /*drawables.Insert(0, field);
-		        drawables.AddRange(field.OnField);
-
-		        if ( field.ConstructOn != null && field.ConstructOn.BaseField == field) {
-			        drawables.Add(field.ConstructOn);
-		        }*/
 	        }
-
-	       // foreach ( Drawable drawable in drawables ) { target.Draw(drawable, states); }
         }
 
         #endregion Drawable
@@ -168,7 +171,7 @@ namespace PracaInzynierska.Map {
 		}
 
 		private void OnRaiseUpdateEvent(UpdateEventArgs e) {
-			UpdateTime?.Invoke(this, e);
+			UpdateTimeEvent?.Invoke(this, e);
 
 			double dx = 0;
 			double dy = 0;
@@ -249,7 +252,10 @@ namespace PracaInzynierska.Map {
             }
         }
 
-        /// <summary>
+	    public IEnumerable<MapField> BorderFields => this.Where(field => field.MapPosition.X == Size - 1 || field.MapPosition.X == 0 ||
+																		 field.MapPosition.Y == Size - 1 || field.MapPosition.Y == 0);
+
+	    /// <summary>
         /// Funkcja generujaca odwolania do kolejnych pol na mapie zaczynajac od lewego gornego rogu
         /// </summary>
         /// <returns>Iterator po polach na mapie</returns>
@@ -291,7 +297,7 @@ namespace PracaInzynierska.Map {
 
         #region PrivateVars
 
-        private static Random rand = new Random(1000);
+	    private Random rand;
         private readonly List<List<MapField>> Grid;
         private Vector2f? prevMousePos;
 

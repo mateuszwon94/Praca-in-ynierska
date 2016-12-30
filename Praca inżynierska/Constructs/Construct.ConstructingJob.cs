@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using PracaInzynierska.Beeings;
 using PracaInzynierska.Events.Job;
 using PracaInzynierska.Map;
 using SFML.Graphics;
 using PracaInzynierska.Utils;
+using PracaInzynierska.Utils.Jobs;
 
 namespace PracaInzynierska.Constructs
 {
@@ -13,24 +15,17 @@ namespace PracaInzynierska.Constructs
 		public class ConstructingJob : Job {
 			internal ConstructingJob(Construct parent) {
 				parent_ = parent;
-
-				HashSet<MapField> set = new HashSet<MapField>();
-				foreach ( MapField neighvour in parent_.Location.SelectMany(field => field.Neighbour.Where(neighvour => !parent_.Location.Contains(neighvour))) ) {
-					set.Add(neighvour);
-				}
-
-				neighboursSet_ = set;
 			}
 
 			public override void Work(object sender, JobEventArgs e) {
-				if ( e is ConstructingJobEventArgs ev ) { parent_.ConstructPoints += ev.Amount * 10; }
-				else {
-					throw new ArgumentException("JobEventArgs is not ConstructingJobEventArgs!");
-				}
+				if ( sender is Men men ) {
+					parent_.ConstructPoints += e.Amount * men.Constructing * 10;
+					men.Fatigue.Value -= e.Amount;
+				} else throw new ArgumentException();
 			}
 
 			public override IEnumerable<MapField> Location {
-				get { return neighboursSet_; }
+				get { return parent_.Location.SelectMany(field => field.Neighbour.Where(neighvour => !parent_.Location.Contains(neighvour))).Distinct(); }
 			}
 
 			public override Status State {
@@ -43,14 +38,9 @@ namespace PracaInzynierska.Constructs
 				}
 			}
 
-			private Construct parent_;
+			private readonly Construct parent_;
 
-			private IEnumerable<MapField> neighboursSet_;
-			private Status state_;
-
-			public override float WorkLeft {
-				get { return parent_.MaxConstructPoints - parent_.ConstructPoints; }
-			}
+			public override float WorkLeft => parent_.MaxConstructPoints - parent_.ConstructPoints;
 		}
 	}
 }

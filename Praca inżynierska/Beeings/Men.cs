@@ -6,36 +6,45 @@ using PracaInzynierska.Events.Job;
 using PracaInzynierska.Map;
 using PracaInzynierska.Utils;
 using PracaInzynierska.Utils.FuzzyLogic.Variables;
+using PracaInzynierska.Utils.Jobs;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using static System.Math;
 using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
 
-namespace PracaInzynierska.Beeings {
+namespace PracaInzynierska.Beeings
+{
 
 	/// <summary>
 	/// Klasa odpowiadajaca za ludzi
 	/// </summary>
-	public class Men : Beeing {
+	public partial class Men : Beeing {
 		public Men() : base() {
 			heuristic_ = EuclideanDistance;
 
-			MouseButtonReleased += (o, e) => {
-									   if ( IsSelected ) IsSelected = false;
-									   else IsSelected = true;
-								   };
+			Rest = new RestJob(this);
+			AttackThis = new AttackJob(this);
 		}
 
 		public string Name { get; set; }
 
 		public Job Job { get; set; }
 
+		public RestJob Rest { get; private set; }
+
 		public float Constructing { get; set; }
 		public float Mining { get; set; }
-		public float Accuracy { get; set; }
+
+		public FuzzyFatigue Fatigue { get; set; }
 
 		public FuzzyLaziness Laziness { get; set; }
+
+		public FuzzyMorale Morale { get; set; }
+
+		public override void Die() {
+			if ( Colony != null && Job != null ) { Colony.JobQueue.Enqueue(Job, Job.Location.All(field => !field.IsAvaliable) ? 3f : 0.5f); }
+		}
 
 		/// <summary>
 		/// Funkcja sprawdza czy podane koordynaty znajduja sie wewnatrz elementu
@@ -44,14 +53,16 @@ namespace PracaInzynierska.Beeings {
 		/// <param name="y">Pozycja Y na ekranie</param>
 		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public override bool InsideElement(int x, int y) {
-            if ( (Location.ScreenPosition.X <= x) && (x < Location.ScreenPosition.X + ScreenSize.X) && (Location.ScreenPosition.Y <= y) && (y < Location.ScreenPosition.Y + ScreenSize.Y) ) {
-                Vector2f pos = new Vector2f(x, y) - Location.ScreenPosition;
-                Vector2f center = Location.Center - Location.ScreenPosition;
+			if ( (Location.ScreenPosition.X <= x) && (x < Location.ScreenPosition.X + ScreenSize.X) &&
+				 (Location.ScreenPosition.Y <= y) && (y < Location.ScreenPosition.Y + ScreenSize.Y) ) {
+				Vector2f pos = new Vector2f(x, y) - Location.ScreenPosition;
+				Vector2f center = Location.Center - Location.ScreenPosition;
 
-                if ( Pow(center.X - pos.X, 2) + Pow(center.Y - pos.Y, 2) <= Pow(MapField.ScreenSize, 2) ) return true;
-            }
-            return false;
-        }
+				if ( Pow(center.X - pos.X, 2) + Pow(center.Y - pos.Y, 2) <= Pow(MapField.ScreenSize, 2) ) return true;
+			}
+
+			return false;
+		}
 
 		/// <summary>
 		/// Tekstura jaka ma być wyświetlana na ekranie
@@ -60,7 +71,7 @@ namespace PracaInzynierska.Beeings {
 			get { return IsSelected ? TextureSelected : TextureNotSelected; }
 			set {
 				if ( IsSelected ) TextureSelected = value;
-				else              TextureNotSelected = value;
+				else TextureNotSelected = value;
 			}
 		}
 
@@ -69,9 +80,7 @@ namespace PracaInzynierska.Beeings {
 		/// </summary>
 		public Sprite TextureSelected {
 			get { return textureSelected_; }
-			set {
-				textureSelected_ = TransformTexture(value);
-			}
+			set { textureSelected_ = TransformTexture(value); }
 		}
 
 		/// <summary>
@@ -79,9 +88,7 @@ namespace PracaInzynierska.Beeings {
 		/// </summary>
 		public Sprite TextureNotSelected {
 			get { return textureNotSelected_; }
-			set {
-				textureNotSelected_ = TransformTexture(value);
-			}
+			set { textureNotSelected_ = TransformTexture(value); }
 		}
 
 		/// <summary>
@@ -110,11 +117,13 @@ namespace PracaInzynierska.Beeings {
 					Job = null;
 				} else if ( Job.State == Job.Status.Done ) {
 					Job = null;
-					Console.WriteLine("BuildJob DONE!");
+					Console.WriteLine("Job DONE!");
 				} else if ( !Job.IsInLocation(Location) ) {
 					if ( GoToField == null ) GoToField = Closest(Job.Location);
 					Go(e.UpdateTime);
-				} else { Job.Work(this, new ConstructingJobEventArgs((float)e.UpdateTime * Constructing)); }
+				} else {
+					Job.Work(this, new JobEventArgs((float)e.UpdateTime));
+				}
 			}
 		}
 
@@ -128,6 +137,7 @@ namespace PracaInzynierska.Beeings {
 					closestField = field;
 				}
 			}
+
 			return closestField;
 		}
 
@@ -149,9 +159,11 @@ namespace PracaInzynierska.Beeings {
 			}
 		}
 
+		public AttackJob AttackThis { get; private set; } 
+
 		/// <summary>Returns a string that represents the current object.</summary>
 		/// <returns>A string that represents the current object.</returns>
-		public override string ToString() { return $"{Name} [HP - {HP}]"; }
+		public override string ToString() => $"{Name} [HP - {HP}]";
 
 		private Sprite textureSelected_;
 		private Sprite textureNotSelected_;

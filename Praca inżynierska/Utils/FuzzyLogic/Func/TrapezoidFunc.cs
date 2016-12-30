@@ -1,9 +1,8 @@
 ﻿using static PracaInzynierska.Utils.Math;
 
 namespace PracaInzynierska.Utils.FuzzyLogic.Func {
-	public class TrapezoidFunc {
-		public TrapezoidFunc(double x0, double x1, double x2, double x3)
-		{
+	public struct TrapezoidFunc {
+		public TrapezoidFunc(double x0, double x1, double x2, double x3) {
 			x0_ = x0;
 			x1_ = x1;
 			x2_ = x2;

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using PracaInzynierska.Exceptions;
 
@@ -36,8 +37,8 @@ namespace PracaInzynierska.Map {
                 get {
                     try {
                         return parent_.map_[parent_.MapPosition.X + x, parent_.MapPosition.Y + y];
-                    } catch {
-                        throw new NoSouchNeighbourException();
+                    } catch (Exception ex) {
+	                    throw new NoSouchNeighbourException("No souch neighbour", ex);
                     }
                 }
             }
@@ -72,51 +73,6 @@ namespace PracaInzynierska.Map {
             /// </summary>
             /// <returns>Iterator po sasiadach</returns>
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-	        public IEnumerable<MapField> NodesPossibleToGo() {
-				for ( sbyte x = -1 ; x <= 1 ; ++x ) {
-					for ( sbyte y = -1 ; y <= 1 ; ++y ) {
-						if ( (x == 0) && (y == 0) ) { continue; }
-
-						MapField mf;
-						try { mf = this[x, y]; }
-						catch ( NoSouchNeighbourException ) { continue; }
-
-						MapField neighbour1 = null,
-								 neighbour2 = null;
-
-						if ( (x == -1) && (y == -1) ) {
-							try { neighbour1 = this[-1, 0]; }
-							catch ( NoSouchNeighbourException ) { }
-
-							try { neighbour2 = this[0, -1]; }
-							catch ( NoSouchNeighbourException ) { }
-						} else if ( (x == 1) && (y == -1) ) {
-							try { neighbour1 = this[0, -1]; }
-							catch ( NoSouchNeighbourException ) { }
-
-							try { neighbour2 = this[1, 0]; }
-							catch ( NoSouchNeighbourException ) { }
-						} else if ( (x == 1) && (y == 1) ) {
-							try { neighbour1 = this[1, 0]; }
-							catch ( NoSouchNeighbourException ) { }
-
-							try { neighbour2 = this[0, 1]; }
-							catch ( NoSouchNeighbourException ) { }
-						} else if ( (x == -1) && (y == 1) ) {
-							try { neighbour1 = this[-1, 0]; }
-							catch ( NoSouchNeighbourException ) { }
-
-							try { neighbour2 = this[0, 1]; }
-							catch ( NoSouchNeighbourException ) { }
-						}
-
-						if ( ((neighbour1 != null) && !neighbour1.IsAvaliable) || ((neighbour2 != null) && !neighbour2.IsAvaliable) ) { continue; }
-
-						yield return mf;
-					}
-				}
-			}
 
 	        #endregion Iterators
 

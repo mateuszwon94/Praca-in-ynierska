@@ -34,15 +34,13 @@ namespace PracaInzynierska.Beeings {
 			if ( (counter_ == 0)) Go(e.UpdateTime, true);
 
 		}
-		
+
 		/// <summary>
 		/// Tekstura jaka ma być wyświetlana na ekranie
 		/// </summary>
 		public override Sprite Texture {
 			get { return texture_; }
-			set {
-				texture_ = TransformTexture(value);
-			}
+			set { texture_ = TransformTexture(value); }
 		}
 
 		/// <summary>
@@ -93,15 +91,15 @@ namespace PracaInzynierska.Beeings {
 			return false;
 		}
 
-		/// <summary>
-		/// Zwraca wektor opisujacy to w jakim kierunku porusza sie dane zwierze
-		/// </summary>
-		public Vector2f MoveVector {
+	    /// <summary>
+        /// Zwraca wektor opisujacy to w jakim kierunku porusza sie dane zwierze
+        /// </summary>
+        public Vector2f MoveVector {
 			get {
-				if ( !IsMoveing || (GoToField  == null)) { return new Vector2f(0, 0); }
+				if ( !IsMoveing || (GoToField  == null)) { return new Vector2f(0f, 0f); }
 
-				Vector2i vec = Location.MapPosition - GoToField.MapPosition;
-				return new Vector2f(vec.X, vec.Y);
+				Vector2f moveVec = new Vector2f(Location.MapPosition.X - GoToField.MapPosition.X, Location.MapPosition.Y - GoToField.MapPosition.Y);
+				return moveVec / (float)Length(moveVec);
 			}
 		}
 

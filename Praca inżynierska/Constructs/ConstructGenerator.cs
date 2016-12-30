@@ -16,14 +16,14 @@ namespace PracaInzynierska.Constructs {
 		}
 
 		public static (Construct horizontal, Construct wertical) Bed(MapField baseField) {
-			return (new Construct(2, 1, baseField, Color.Blue) {
-																   MaxConstructPoints = 250,
-																   Name = "Bed",
-															   },
-					new Construct(1, 2, baseField, Color.Blue) {
-																   MaxConstructPoints = 250,
-																   Name = "Bed",
-															   });
+			return (new Bed(2, 1, baseField, Color.Blue) {
+															 MaxConstructPoints = 250,
+															 Name = "Bed",
+														 },
+					new Bed(1, 2, baseField, Color.Blue) {
+															 MaxConstructPoints = 250,
+															 Name = "Bed",
+														 });
 
 		}
 
@@ -34,9 +34,9 @@ namespace PracaInzynierska.Constructs {
 																			Name = "Bed",
 																		},
 					new Construct(2, 2, baseField, new Color(60, 60, 0)) {
-						MaxConstructPoints = 250,
-						Name = "Bed",
-					});
+																			MaxConstructPoints = 250,
+																			Name = "Bed",
+																		});
 		}
 
 		public static (Construct horizontal, Construct wertical) FoodMaker(MapField baseField) {
@@ -45,9 +45,9 @@ namespace PracaInzynierska.Constructs {
 																			  Name = "Bed",
 																		  },
 					new Construct(2, 3, baseField, new Color(35, 175, 75)) {
-						MaxConstructPoints = 250,
-						Name = "Bed",
-					});
+																			  MaxConstructPoints = 250,
+																			  Name = "Bed",
+																		  });
 		}
 	}
 }

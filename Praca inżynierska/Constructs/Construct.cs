@@ -18,7 +18,7 @@ namespace PracaInzynierska.Constructs
 			SetTextureFromColor();
 			BuildJob = new ConstructingJob(this);
 		}
-		
+
 		public ConstructingJob BuildJob { get; private set; }
 
 		/// <summary>

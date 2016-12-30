@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using PracaInzynierska.Constructs;
 using PracaInzynierska.Map;
@@ -16,6 +17,9 @@ using static PracaInzynierska.Textures.GUITextures;
 using static PracaInzynierska.Textures.MapTextures;
 using PracaInzynierska.Beeings;
 using PracaInzynierska.Utils;
+using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
+using PracaInzynierska.Utils.Diagnostic;
+using static PracaInzynierska.Utils.Diagnostic.PathFinding;
 using PracaInzynierska.Utils.FuzzyLogic.Variables;
 
 namespace PracaInzynierska {
@@ -23,6 +27,12 @@ namespace PracaInzynierska {
 	public static class Program {
 		public static void Main(string[] args) {
 
+#if TEST
+			PerformanceTests(25, 200, @"PerformanceTest.txt");
+			QualityTests(25, 20, 10, @"QualityTest.txt");
+
+			return;
+#endif
 			//Inicjalizacja okna
 			window = new RenderWindow(new VideoMode(1280, 720, 32), "Praca inzynierska", Styles.Close);
 			window.Closed += (o, e) => window.Close();
@@ -57,7 +67,7 @@ namespace PracaInzynierska {
 																			   if ( Mouse.IsButtonPressed(Mouse.Button.Left) ) window.Close();
 																		   }
 										   },
-								new BuildButton() {
+								new BuildButton(font, window) {
 													  Name = "Build Button",
 													  IsActive = true,
 													  ButtonTexture = new Sprite(NormalButtonTexture),
@@ -79,7 +89,7 @@ namespace PracaInzynierska {
 
 			WriteLine("Start creating colony!");
 			Colony colony = new Colony(map, window);
-			map.UpdateTime += colony.UpdateTime;
+			map.UpdateTimeEvent += colony.UpdateTime;
 			colony.AddColonist(new Men() {
 											 Name = "Adam",
 											 MoveSpeed = 5,
@@ -87,51 +97,56 @@ namespace PracaInzynierska {
 											 TextureSelected = new Sprite(MenTextureSelected),
 											 TextureNotSelected = new Sprite(MenTexture),
 											 IsSelected = false,
-											 HP = new FuzzyHP(50f) {
-																	   MaxHP = 50f
-																   },
+											 HP = new FuzzyHP(50f, 50f),
+											 Laziness = new FuzzyLaziness(2.5f),
+											 Fatigue = new FuzzyFatigue(10f),
 											 Strength = 5f,
+											 Morale = new FuzzyMorale(5f),
 											 Mining = 3f,
 											 Constructing = 4f,
-											 Accuracy = 4.5f,
 										 });
-			colony.AddConstruct(new Construct(2, 3, map[3, 3], Color.Magenta) {
+			colony.AddColonist(new Men() {
+											 Name = "Adam",
+											 MoveSpeed = 5,
+											 Location = map[10, 23],
+											 TextureSelected = new Sprite(MenTextureSelected),
+											 TextureNotSelected = new Sprite(MenTexture),
+											 IsSelected = false,
+											 HP = new FuzzyHP(50f, 50f),
+											 Laziness = new FuzzyLaziness(5f),
+											 Fatigue = new FuzzyFatigue(8f),
+											 Strength = 5f,
+											 Morale = new FuzzyMorale(5f),
+											 Mining = 10f,
+											 Constructing = 4f,
+										 });
+			colony.AddColonist(new Men() {
+											 Name = "Adam",
+											 MoveSpeed = 5,
+											 Location = map[13, 20],
+											 TextureSelected = new Sprite(MenTextureSelected),
+											 TextureNotSelected = new Sprite(MenTexture),
+											 IsSelected = false,
+											 HP = new FuzzyHP(50f, 50f),
+											 Laziness = new FuzzyLaziness(7f),
+											 Fatigue = new FuzzyFatigue(3f),
+											 Strength = 7f,
+											 Morale = new FuzzyMorale(5f),
+											 Mining = 3f,
+											 Constructing = 4f,
+										 });
+			/*colony.AddConstruct(new Construct(2, 3, map[3, 3], Color.Magenta) {
 																				  MaxConstructPoints = 200
-																			  });
+																			  });*/
 
 			WriteLine("Colony created!");
-			
-			/*WriteLine("Start creating path!");
-			WriteLine("Searching for start and end point!");
-			//tymczasowe sprawdzenie wyznaczanie sciezki
-			IList<MapField> path;
-		    MapField start = null,
-		             stop  = null;
+			Besiegers besigers = new Besiegers(map, colony);
+			map.UpdateTimeEvent += besigers.UpdateTime;
+			WriteLine("Start creating besigers!");
 
-            //Wyszukanie pierwszego dostepnego pola
-            foreach ( MapField field in map.Where(field => field.IsAvaliable) ) {
-	            start = field;
-	            break;
-            }
+			WriteLine("Besigers created!");
 
-            //wyszukanie ostatniego dostepnego pola
-            foreach ( MapField field in map.Reverse().Where(field => field.IsAvaliable) ) {
-	            stop = field;
-	            break;
-            }
-			WriteLine("Sstart and end point found!");
-
-			try { //próba wyznaczenia sciezki miedzy wyznaczonymi polami
-                path = PathFinding.AStar(start, stop, PathFinding.Metric.EuclideanDistance);
-			} catch ( FieldNotAvaliableException ) {
-				WriteLine($"Texture [{start.MapPosition.X}, {start.MapPosition.Y}] is avaliable = {start.IsAvaliable}");
-                WriteLine($"Texture [{stop.MapPosition.X}, {stop.MapPosition.Y}] is avaliable = {stop.IsAvaliable}");
-                WriteLine("But path between this field dose not exists!");
-				path = null;
-			}
-			WriteLine("Path created!");*/
-
-			WriteLine("Start creating herd!");
+			/*WriteLine("Start creating herd!");
 			MapField mapField;
 			int center = map.Size / 2;
 			do {
@@ -143,14 +158,14 @@ namespace PracaInzynierska {
 
 			Herd herd = new Herd(mapField, 5);
 
-			map.UpdateTime += herd.UpdateTime;
-			foreach ( Animal animal in herd ) { map.UpdateTime += animal.UpdateTime; }
-			WriteLine("Herd created!");
+			map.UpdateTimeEvent += herd.UpdateTime;
+			foreach ( Animal animal in herd ) { map.UpdateTimeEvent += animal.UpdateTime; }
+			WriteLine("Herd created!");*/
 
 			time.Start();
 
             //Główna petla gry
-            while ( window.IsOpen ) {
+            while ( window.IsOpen && colony.Colonist.Count > 0) {
 				window.DispatchEvents();
 				window.Clear();
 
@@ -162,25 +177,21 @@ namespace PracaInzynierska {
 
 				window.Draw(map);
 
-				/*if ( path != null ) {
-					foreach ( Sprite val in path.Select(field => new Sprite(SelectedTexture) {
-																	 Position = field.ScreenPosition
-																 }) ) {
-						window.Draw(val);
-					}
-				}*/
+	            //window.Draw(herd);
+
+				window.Draw(besigers);
 
 				window.Draw(colony);
-
-	            window.Draw(herd);
-	            //window.Draw(an);
 
 				window.Draw(gui);
 
 				window.Display();
 			}
+
+			WriteLine("PRZEGRAŁEŚ!");
+			ReadKey();
 		}
-		
+
 		/// <summary>
 		/// Funkcja wyświetla ekran tytułowy
 		/// </summary>
@@ -307,6 +318,100 @@ namespace PracaInzynierska {
 			window.Display();
 		}
 
+		static void PerformanceTests(int mapSize, int iter, string fileName) {
+			AStarDiagnostic diagnostic;
+			using ( StreamWriter file = new StreamWriter(fileName) ) {
+				for ( int i = 0 ; i < iter+1 ; i++ ) {
+					if ( i == 105 ) continue;
+					Write($"{i}\t");
+					Map.Map map = new Map.Map(mapSize, new MapSeed((int)(mapSize / 2.5), (int)(mapSize / 5.0), (int)(mapSize / 7.5)), i);
+					RenderTexture render = new RenderTexture((uint)(mapSize * MapField.ScreenSize),
+															 (uint)(mapSize * MapField.ScreenSize), true) {
+																											  Smooth = true,
+																										  };
+					render.Draw(map);
+					render.Texture.CopyToImage().SaveToFile($@"map_{i}.png");
+
+					MapField start = map.First(field => field.IsAvaliable);
+					MapField stop = map.Reverse().First(field => field.IsAvaliable);
+
+					Write("E\t");
+					diagnostic = new AStarDiagnostic(new Stopwatch());
+					diagnostic.Time.Start();
+					try { AStar(start, stop, EuclideanDistance, ref diagnostic); } catch ( FieldNotAvaliableException ) { }
+					diagnostic.Time.Stop();
+
+					file.WriteLine($"{i}\tEucildesian\t{diagnostic.Time.Elapsed.TotalMilliseconds}\t{diagnostic.Iterations}\t{diagnostic.TotalCost}\t{diagnostic.TotalLength}");
+
+					Write("M\t");
+					diagnostic = new AStarDiagnostic(new Stopwatch());
+					diagnostic.Time.Start();
+					try { AStar(start, stop, ManhattanDistance, ref diagnostic); } catch ( FieldNotAvaliableException ) { }
+					diagnostic.Time.Stop();
+
+					file.WriteLine($"{i}\tManhattan\t{diagnostic.Time.Elapsed.TotalMilliseconds}\t{diagnostic.Iterations}\t{diagnostic.TotalCost}\t{diagnostic.TotalLength}");
+
+					Write("N\t");
+					diagnostic = new AStarDiagnostic(new Stopwatch());
+					diagnostic.Time.Start();
+					try { AStar(start, stop, NullDistance, ref diagnostic); } catch ( FieldNotAvaliableException ) { }
+					diagnostic.Time.Stop();
+
+					file.WriteLine($"{i}\tNull\t{diagnostic.Time.Elapsed.TotalMilliseconds}\t{diagnostic.Iterations}\t{diagnostic.TotalCost}\t{diagnostic.TotalLength}");
+					WriteLine("END");
+					file.Flush();
+
+					GC.Collect();
+				}
+			}
+		}
+
+		static void QualityTests(int mapSize, int iter, int subIter, string fileName) {
+			AStarDiagnostic diagnostic;
+			using ( StreamWriter file = new StreamWriter(fileName) ) {
+				for ( int i = 0 ; i < iter ; i++ ) {
+					Map.Map map = new Map.Map(mapSize, new MapSeed((int)(mapSize / 2.5), (int)(mapSize / 5.0), (int)(mapSize / 7.5)), i);
+
+					for ( int j = 0 ; j < subIter ; j++ ) {
+						Write($"{i}\t{j}\t");
+						MapField start = map[rand.Next(mapSize), rand.Next(mapSize)];
+						MapField stop = map[rand.Next(mapSize), rand.Next(mapSize)];
+
+						while ( !start.IsAvaliable ) { start = map[rand.Next(mapSize), rand.Next(mapSize)]; }
+						while ( !stop.IsAvaliable || stop == start ) { stop = map[rand.Next(mapSize), rand.Next(mapSize)]; }
+
+						Write("E\t");
+						diagnostic = new AStarDiagnostic(new Stopwatch());
+						diagnostic.Time.Start();
+						try { AStar(start, stop, EuclideanDistance, ref diagnostic); } catch ( FieldNotAvaliableException ) { }
+						diagnostic.Time.Stop();
+
+						file.WriteLine($"{i}\tEucildesian\t{diagnostic.Time.Elapsed.TotalMilliseconds}\t{diagnostic.Iterations}\t{diagnostic.TotalCost}\t{diagnostic.TotalLength}");
+
+						Write("M\t");
+						diagnostic = new AStarDiagnostic(new Stopwatch());
+						diagnostic.Time.Start();
+						try { AStar(start, stop, ManhattanDistance, ref diagnostic); } catch ( FieldNotAvaliableException ) { }
+						diagnostic.Time.Stop();
+
+						file.WriteLine($"{i}\tManhattan\t{diagnostic.Time.Elapsed.TotalMilliseconds}\t{diagnostic.Iterations}\t{diagnostic.TotalCost}\t{diagnostic.TotalLength}");
+
+						Write("N\t");
+						diagnostic = new AStarDiagnostic(new Stopwatch());
+						diagnostic.Time.Start();
+						try { AStar(start, stop, NullDistance, ref diagnostic); } catch ( FieldNotAvaliableException ) { }
+						diagnostic.Time.Stop();
+
+						file.WriteLine($"{i}\tNull\t{diagnostic.Time.Elapsed.TotalMilliseconds}\t{diagnostic.Iterations}\t{diagnostic.TotalCost}\t{diagnostic.TotalLength}");
+						WriteLine("END");
+
+						file.Flush();
+					}
+
+					GC.Collect();
+				}
+			}
+		}
 
 
 		/// <summary>

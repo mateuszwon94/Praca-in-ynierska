@@ -29,16 +29,19 @@ namespace PracaInzynierska.Utils.Algorithm {
             //Lista przeszukanych pol
 			List<PathFindingNode> closeList = new List<PathFindingNode>(forbidenFields.Select(forbidenField => new PathFindingNode(forbidenField)));
 
-			bool achivewedGoal = false;
+			bool reachedGoal = false;
 
 			//dopoki jakiekolwiek pole moze zostac jeszcze przebadane
 	        while ( openList.Count != 0 ) {
 				PathFindingNode current = openList.RemoveAtAndGet(0);
 				closeList.Add(current);
 
-				if ( current.This == to ) { // znaleziono pole do ktorego dazylismy
-			        achivewedGoal = true;
-		        } else if ( achivewedGoal ) {
+
+		        if ( heuristic == NullDistance && current.This == to ) {
+			        return ReconstructPath(current);
+		        } else if ( current.This == to ) { // znaleziono pole do ktorego dazylismy
+			        reachedGoal = true;
+		        } else if ( reachedGoal ) {
 			        PathFindingNode endNode = openList.Concat(closeList)
 													  .First(node => node.This == to);
 
@@ -48,35 +51,30 @@ namespace PracaInzynierska.Utils.Algorithm {
 			        if ( minValInOpenList < endNode.CostFromStart ) return ReconstructPath(endNode);
 		        }
 
-		        Parallel.ForEach(current.This.Neighbour.Where(neighbour => neighbour.IsAvaliable),
-								 neighbour => {
-									 PathFindingNode neighbourNode = new PathFindingNode(neighbour) {
-																		 Parent = current,
-																		 CostFromStart = current.CostFromStart +
-																						 EuclideanDistance(current.This, neighbour) * current.This.Cost,
-																		 CostToEnd = heuristic(neighbour, to)
-																	 };
+		        foreach ( PathFindingNode neighbourNode in current.This.Neighbour.Where(neighbour => neighbour.IsAvaliable)
+																  .Select(neighbour => new PathFindingNode(neighbour) {
+																														  Parent = current,
+																														  CostFromStart = current.CostFromStart +
+																																		  EuclideanDistance(current.This, neighbour) * current.This.Cost,
+																														  CostToEnd = heuristic(neighbour, to)
+																													  }) ) {
+			        //Zmiana parametrow sciezki jesli droga do sasiada jest krotsza z obecnego pola niz ustalona wczesniej
+			        if ( heuristic != NullDistance && closeList.Contains(neighbourNode) ) {
+				        PathFindingNode oldNode = closeList[closeList.IndexOf(neighbourNode)];
+				        if ( neighbourNode.CostFromStart < oldNode.CostFromStart ) {
+					        closeList.Remove(oldNode);
+					        openList.Add(neighbourNode);
+				        }
+			        } else if ( openList.Contains(neighbourNode) ) {
+				        PathFindingNode oldNode = openList[openList.IndexOf(neighbourNode)];
+				        if ( neighbourNode.CostFromStart < oldNode.CostFromStart ) {
+					        oldNode.CostFromStart = neighbourNode.CostFromStart;
+					        oldNode.Parent = neighbourNode.Parent;
+				        }
+			        } else { openList.Add(neighbourNode); }
+		        }
 
-									 //Zmiana parametrow sciezki jesli droga do sasiada jest krotsza z obecnego pola niz ustalona wczesniej
-									 if ( closeList.Contains(neighbourNode) ) {
-										 PathFindingNode oldNode = closeList[closeList.IndexOf(neighbourNode)];
-										 if ( neighbourNode.CostFromStart < oldNode.CostFromStart ) {
-											 lock ( closeListMutex_ ) closeList.Remove(oldNode);
-											 lock ( openListMutex_ ) openList.Add(neighbourNode);
-										 }
-									 } else if ( openList.Contains(neighbourNode) ) {
-										 PathFindingNode oldNode;
-										 lock ( openListMutex_ ) oldNode = openList[openList.IndexOf(neighbourNode)];
-										 if ( neighbourNode.CostFromStart < oldNode.CostFromStart ) {
-											 oldNode.CostFromStart = neighbourNode.CostFromStart;
-											 oldNode.Parent = neighbourNode.Parent;
-										 }
-									 } else {
-										 lock ( openListMutex_ ) openList.Add(neighbourNode);
-									 }
-								 });
-
-				//openList.AsParallel().WithDegreeOfParallelism(4).OrderBy(field => field.AllCost);
+		        //openList.AsParallel().WithDegreeOfParallelism(4).OrderBy(field => field.AllCost);
 				openList.Sort();
 			}
 
@@ -119,7 +117,7 @@ namespace PracaInzynierska.Utils.Algorithm {
 
 		#region Private
 
-		private class PathFindingNode : IComparable<PathFindingNode> {
+		internal class PathFindingNode : IComparable<PathFindingNode> {
 			internal PathFindingNode(MapField This) {
 				this.This = This;
 			}
@@ -167,8 +165,5 @@ namespace PracaInzynierska.Utils.Algorithm {
 		}
 
 		#endregion
-
-		private static object openListMutex_ = new object();
-		private static object closeListMutex_ = new object();
 	}
 }

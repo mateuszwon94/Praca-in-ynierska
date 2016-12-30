@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using PracaInzynierska.Events;
@@ -11,6 +12,7 @@ using SFML.Window;
 using PracaInzynierska.Utils.Interfaces;
 using static PracaInzynierska.Utils.Math;
 using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
+using static System.Math;
 
 namespace PracaInzynierska.Beeings {
 
@@ -28,6 +30,8 @@ namespace PracaInzynierska.Beeings {
 
 		public FuzzyHP HP { get; set; }
 		public float Strength { get; set; }
+
+		public virtual void Die() { }
 
 		#region Events
 
@@ -107,7 +111,8 @@ namespace PracaInzynierska.Beeings {
 		/// <param name="y">Pozycja Y na ekranie</param>
 		/// <returns>Zwraca true, jesli podane koordynaty znajduja sie wewnatrz obiektu, w przeciwnym wypadku false</returns>
 		public virtual bool InsideElement(int x, int y) {
-			return (ScreenPosition.X <= x) && (x < ScreenPosition.X + ScreenSize.X) && (ScreenPosition.Y <= y) && (y < ScreenPosition.Y + ScreenSize.Y);
+			return (ScreenPosition.X <= x) && (x < ScreenPosition.X + ScreenSize.X) &&
+				   (ScreenPosition.Y <= y) && (y < ScreenPosition.Y + ScreenSize.Y);
 		}
 
 		/// <summary>
@@ -131,8 +136,7 @@ namespace PracaInzynierska.Beeings {
 		protected Sprite TransformTexture(Sprite tex) {
 			tex.Origin = new Vector2f(tex.Texture.Size.X / 2f, tex.Texture.Size.Y / 2f);
 			tex.Position = Location.Center;
-			if (GoToField != null)
-			{
+			if ( GoToField != null ) {
 				tex.Position += new Vector2f((float)Lerp(tex.Position.X, GoToField.Center.X, moved_),
 											 (float)Lerp(tex.Position.Y, GoToField.Center.Y, moved_));
 			}
@@ -159,12 +163,20 @@ namespace PracaInzynierska.Beeings {
 				mapField_ = value;
 				mapField_.OnField.Add(this);
 			}
-		}
+        }
+        public Vector2f ExactPosition {
+	        get {
+		        if ( IsMoveing )
+			        return new Vector2f((float)Lerp(Location.MapPosition.X, GoToField.MapPosition.X, moved_),
+										(float)Lerp(Location.MapPosition.Y, GoToField.MapPosition.Y, moved_));
+		        else return new Vector2f(Location.MapPosition.X, Location.MapPosition.Y);
+	        }
+        }
 
 		/// <summary>
-		/// Zwraca pozucje na ekranie danego stworzenia
-		/// </summary>
-		public abstract Vector2f ScreenPosition { get; set; }
+        /// Zwraca pozucje na ekranie danego stworzenia
+        /// </summary>
+        public abstract Vector2f ScreenPosition { get; set; }
 
 		/// <summary>
 		/// Zwraca rozmiar tekstury
@@ -189,7 +201,8 @@ namespace PracaInzynierska.Beeings {
 		/// <param name="to">Stworzenie do ktorego liczymy odleglosc</param>
 		/// <returns>Odleglosc miedzy stworzeniami</returns>
 		public static float Distance(Beeing from, Beeing to) {
-			return MapField.Distance(from.Location, to.Location);
+			return (float)Sqrt((from.ExactPosition.X - to.ExactPosition.X) * (from.ExactPosition.X - to.ExactPosition.X) +
+		                       (from.ExactPosition.Y - to.ExactPosition.Y) * (from.ExactPosition.Y - to.ExactPosition.Y));
 		}
 
 		/// <summary>
