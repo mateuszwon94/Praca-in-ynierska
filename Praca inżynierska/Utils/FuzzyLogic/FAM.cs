@@ -20,10 +20,10 @@ namespace PracaInzynierska.Utils.FuzzyLogic {
 		public (float val, string action) MaxValue {
 			get {
 				(float v, string a) value = ( float.MinValue, string.Empty );
-				foreach ( (float val, string action) pair in from list in list_
-															 from (float val, string action) pair in list_
-															 where pair.val >= value.v
-															 select pair ) value = pair;
+				foreach ( (float val, string action) pair in list_.SelectMany(list => list) ) {
+					if (pair.val > value.v)
+					   value = pair;
+				}
 
 				return value;
 			}

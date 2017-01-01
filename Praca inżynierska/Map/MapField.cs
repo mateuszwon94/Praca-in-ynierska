@@ -183,8 +183,13 @@ namespace PracaInzynierska.Map {
 				if ( beeing is Animal a ) {
 					a.Texture = new Sprite(MapTextures.AnimalTexture);
 				} else if ( beeing is Men m ) {
-					m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
-					m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
+					if ( m.Colony != null ) {
+						m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
+						m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
+					} else {
+						m.TextureNotSelected = new Sprite(MapTextures.BesigerTexture);
+						m.TextureSelected = new Sprite(MapTextures.BesigerTexture);
+					}
 				}
 			}
 
@@ -194,31 +199,32 @@ namespace PracaInzynierska.Map {
 	        }
         }
 
-        /// <summary>
-        /// Funkcja wywoływana przy poruszeniu mapy
-        /// </summary>
-        /// <param name="sender">Obiekt, ktory wywolal event</param>
-        /// <param name="e">Argumenty z jakimi otrzymano event</param>
+		/// <summary>
+		/// Funkcja wywoływana przy poruszeniu mapy
+		/// </summary>
+		/// <param name="sender">Obiekt, ktory wywolal event</param>
+		/// <param name="e">Argumenty z jakimi otrzymano event</param>
 		internal void MapMoved(object sender, MapMovedEventArgs e) {
-            ScreenPosition = new Vector2f(ScreenPosition.X + (float)e.dx, ScreenPosition.Y + (float)e.dy);
+			ScreenPosition = new Vector2f(ScreenPosition.X + (float)e.dx, ScreenPosition.Y + (float)e.dy);
 
-            if ( IsSomethingOn ) {
-	            foreach ( Beeing beeing in OnField ) {
-		            if ( beeing is Animal a ) {
-			            a.Texture = new Sprite(MapTextures.AnimalTexture);
-		            } else if ( beeing is Men m ) {
-			            m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
-			            m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
-		            }
-	            }
-            }
+			if ( IsSomethingOn ) {
+				foreach ( Beeing beeing in OnField ) {
+					if ( beeing is Animal a ) { a.Texture = new Sprite(MapTextures.AnimalTexture); } else if ( beeing is Men m ) {
+						if ( m.Colony != null ) {
+							m.TextureNotSelected = new Sprite(MapTextures.MenTexture);
+							m.TextureSelected = new Sprite(MapTextures.MenTextureSelected);
+						} else {
+							m.TextureNotSelected = new Sprite(MapTextures.BesigerTexture);
+							m.TextureSelected = new Sprite(MapTextures.BesigerTexture);
+						}
+					}
+				}
 
-	        if ( ConstructOn != null && ConstructOn.BaseField == this ) {
-				ConstructOn.ScreenPosition = ScreenPosition;
-	        }
-        }
+				if ( ConstructOn != null && ConstructOn.BaseField == this ) { ConstructOn.ScreenPosition = ScreenPosition; }
+			}
+		}
 
-        #endregion EventHandlers
+		#endregion EventHandlers
 
         #region EqualityFunc
 

@@ -110,10 +110,9 @@ namespace PracaInzynierska.Beeings
 		/// <param name="sender">Obiekt wysylajacy zdazenie</param>
 		/// <param name="e">Argumenty zdarzenia</param>
 		public override void UpdateTime(object sender, UpdateEventArgs e) {
-			//if ( IsSelected ) { }
 			if ( Job != null ) {
 				if ( Job.Location.All(field => !field.IsAvaliable) ) {
-					Colony.JobQueue.Enqueue(Job, 3f);
+					Colony?.JobQueue.Enqueue(Job, 3f);
 					Job = null;
 				} else if ( Job.State == Job.Status.Done ) {
 					Job = null;

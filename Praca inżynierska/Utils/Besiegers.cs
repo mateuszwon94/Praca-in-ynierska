@@ -17,12 +17,14 @@ namespace PracaInzynierska.Utils {
 		public Besiegers(Map.Map map, Colony colony) {
 			map_ = map;
 			colony_ = colony;
-			counter_ = new TimeSpan();
-			nextAttack_ = new TimeSpan(0, rand_.Next(2), rand_.Next(60));
+			counter_ = new TimeSpan(0, rand_.Next(2), rand_.Next(60));
 			besigers_ = new List<Men>();
 		}
 
-		public void RemoveBesiger(Men besiger) => besigersToRemove_.Add(besiger);
+		public void RemoveBesiger(Men besiger) {
+			besigersToRemove_.Add(besiger);
+			map_.UpdateTimeEvent += besiger.UpdateTime;
+		}
 
 		/// <summary>
 		/// Draw the object to a render target
@@ -36,7 +38,7 @@ namespace PracaInzynierska.Utils {
 		}
 
 		public void UpdateTime(object sender, UpdateEventArgs e) {
-			Console.WriteLine($"{State} \t {counter_:g} \t {nextAttack_:g} \t {preparationCounter_:g}");
+			Console.WriteLine($"{State} \t {counter_:g} \t \t {preparationCounter_:g}");
 
 			for ( int index = 0 ; index < besigers_.Count ; ) {
 				if ( besigers_[index].HP.Value > 0f ) {
@@ -64,7 +66,12 @@ namespace PracaInzynierska.Utils {
 
 			if ( State == Status.Spawning ) {
 				menStillNotFleeing_ = menAttacking_ = rand_.Next(3, 11);
-				MapField location = map_.First(field => colony_.All(colonist => !(MapField.Distance(field, colonist.Location) <= 0.4f * map_.Size)));
+				MapField location = null;
+				while ( location == null || !location.IsAvaliable ||
+						colony_.Any(colonist => MapField.Distance(location, colonist.Location) <= 0.4f * map_.Size) ) {
+					location = map_[rand_.Next(map_.Size), rand_.Next(map_.Size)];
+				}
+
 				for ( int i = 0 ; i < menAttacking_; i++ ) {
 					MapField currentField = null;
 					while ( currentField == null || !currentField.IsAvaliable ) {
@@ -89,13 +96,15 @@ namespace PracaInzynierska.Utils {
 											});
 				}
 
+				foreach ( Men besiger in besigers_ ) { map_.UpdateTimeEvent += besiger.UpdateTime; }
+
 				State = Status.Preparation;
 			} else if ( State == Status.Preparation )
 			{
 				if (preparationCounter_ == null) preparationCounter_ = new TimeSpan(0, 0, rand_.Next(60));
 				preparationCounter_ -= e.Elapsed;
 
-				if ( preparationCounter_ <= new TimeSpan(0, 0, 0, 0, 0) ) {
+				if ( preparationCounter_ <= TimeSpan.Zero) {
 					preparationCounter_ = null;
 					State = Status.Attack;
 				}
@@ -108,23 +117,31 @@ namespace PracaInzynierska.Utils {
 				foreach ( Men besiger in besigers_ ) {
 					string stateFleeing = MakeDecision(besiger.HP, besiger.Morale);
 
-					if ( stateFleeing == "Flee" && (besiger.Job == null || besiger.Job.GetType() == typeof(Men.AttackJob))) {
-						besiger.Job = new Men.FleeJob(besiger, map_, colony_, this);
-						--menStillNotFleeing_;
-						foreach ( Men other in besigers_.Where(b => b != besiger) ) { other.Morale.Value -= 2f; }
-					} else if ( stateFleeing == "Atack" && (besiger.Job == null || besiger.Job.GetType() != typeof(Men.AttackJob))) {
-						besiger.Job = colony_.Colonist[rand_.Next(colony_.Colonist.Count)].AttackThis;
+					switch ( stateFleeing ) {
+						case "Flee":
+							if ( besiger.Job is Men.FleeJob ) continue;
+
+							besiger.Job = new Men.FleeJob(besiger, map_, colony_, this);
+							--menStillNotFleeing_;
+							foreach ( Men other in besigers_.Where(b => b != besiger) ) { other.Morale.Value -= 2f; }
+
+							break;
+						case "Atack":
+							if ( besiger.Job is Men.AttackJob ) continue;
+
+							besiger.Job = colony_.Colonist[rand_.Next(colony_.Colonist.Count)].AttackThis;
+							break;
 					}
 				}
-			} else if ( State == Status.Flee ) {
+			}
+			else if ( State == Status.Flee ) {
 				foreach ( Men besiger in besigers_.Where(besiger => besiger.Job == null || besiger.Job.GetType() != typeof(Men.FleeJob)) ) {
 					besiger.Job = new Men.FleeJob(besiger, map_, colony_, this);
 				}
-			} else if ( counter_ >= nextAttack_ ) {
+			} else if ( counter_ <= TimeSpan.Zero ) {
 				State = Status.Spawning;
-				counter_ = new TimeSpan();
-				nextAttack_ = new TimeSpan(0, rand_.Next(2), rand_.Next(60));
-			} else if ( State == Status.None ) counter_ += e.Elapsed;
+				counter_ = new TimeSpan(0, rand_.Next(2), rand_.Next(60));
+			} else if ( State == Status.None ) counter_ -= e.Elapsed;
 		}
 
 		private static string MakeDecision(FuzzyHP hp, FuzzyMorale morale) {
@@ -154,7 +171,6 @@ namespace PracaInzynierska.Utils {
 		private readonly Map.Map map_;
 		private readonly Colony colony_;
 		private TimeSpan counter_;
-		private TimeSpan nextAttack_;
 		private TimeSpan? preparationCounter_;
 		private static Random rand_ = new Random();
 		private readonly List<Men> besigers_;

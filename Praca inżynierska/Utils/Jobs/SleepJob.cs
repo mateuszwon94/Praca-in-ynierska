@@ -10,24 +10,22 @@ using PracaInzynierska.Map;
 namespace PracaInzynierska.Utils.Jobs {
 	public class SleepJob : Job {
 		public SleepJob(Men owner, Bed bed) {
-			bed_ = bed;
 			owner_ = owner;
-			bed_.IsFree = false;
+			if ( bed != null ) {
+				bed_ = bed;
+				bed_.IsFree = false;
+			}
 		}
 
 		public override void Work(object sender, JobEventArgs e) {
 			State = Status.Working;
-			if ( WorkLeft <= 0f )
-			{
+			if ( WorkLeft <= 0f ) {
 				State = Status.Done;
-				bed_.IsFree = true;
-			}
-			else if ( sender == owner_ )
-			{
+				if ( bed_ != null ) bed_.IsFree = true;
+			} else if ( sender == owner_ ) {
 				owner_.HP.Value += e.Amount * 10;
 				owner_.Fatigue.Value += e.Amount * (bed_ == null ? 0.33f : 0.5f);
-			}
-			else throw new ArgumentException();
+			} else throw new ArgumentException();
 		}
 
 		public override float WorkLeft => 10f-owner_.Fatigue.Value;
@@ -55,6 +53,6 @@ namespace PracaInzynierska.Utils.Jobs {
 		private Bed bed_;
 		private Men owner_;
 		private MapField lastLocation_;
-		private Random rand_;
+		private static Random rand_ = new Random();
 	}
 }

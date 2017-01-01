@@ -21,6 +21,11 @@ namespace PracaInzynierska.Beeings
 				if ( sender is Men attacker ) {
 					if ( sender == owner_ ) throw new ArgumentException();
 
+					if ( !(owner_.Job is AttackJob) ) {
+						if (owner_.Colony != null && owner_.Job != null) owner_.Colony.JobQueue.Enqueue(owner_.Job, 0.5f);
+						owner_.Job = attacker.AttackThis;
+					}
+
 					owner_.HP.Value -= attacker.Strength * e.Amount * 0.25f;
 				}
 			}

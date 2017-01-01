@@ -188,6 +188,7 @@ namespace PracaInzynierska {
 				window.Display();
 			}
 
+			window.Close();
 			WriteLine("PRZEGRAŁEŚ!");
 			ReadKey();
 		}
