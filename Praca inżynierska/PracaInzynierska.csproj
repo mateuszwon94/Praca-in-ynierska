@@ -179,7 +179,6 @@
     <Compile Include="Constructs\Construct.ConstructingJob.cs" />
     <Compile Include="Constructs\Construct.cs" />
     <Compile Include="Constructs\Construct.MapFieldList.cs" />
-    <Compile Include="Constructs\ConstructGenerator.cs" />
     <Compile Include="Events\Job\JobEventArgs.cs" />
     <Compile Include="Events\MapMovedEventArgs.cs" />
     <Compile Include="Events\MapResizedEventArgs.cs" />
@@ -191,6 +190,7 @@
     <Compile Include="Map\MapField.FieldNeighvours.cs" />
     <Compile Include="UserInterface\Controls\BuildButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
+    <Compile Include="UserInterface\Controls\ColonySurface.cs" />
     <Compile Include="UserInterface\GUI.cs" />
     <Compile Include="UserInterface\GUIElement.cs" />
     <Compile Include="Map\MapSeed.cs" />
@@ -216,7 +216,7 @@
     <Compile Include="Utils\FuzzyLogic\Func\RightShoulderFunc.cs" />
     <Compile Include="Utils\FuzzyLogic\Func\TraingularFunc.cs" />
     <Compile Include="Utils\FuzzyLogic\Func\TrapezoidFunc.cs" />
-    <Compile Include="Utils\FuzzyLogic\Variables\FuzzyFatigue.cs" />
+    <Compile Include="Utils\FuzzyLogic\Variables\FuzzyRest.cs" />
     <Compile Include="Utils\FuzzyLogic\Variables\FuzzyMorale.cs" />
     <Compile Include="Utils\FuzzyLogic\Variables\FuzzyLaziness.cs" />
     <Compile Include="Utils\FuzzyLogic\Variables\FuzzyHP.cs" />

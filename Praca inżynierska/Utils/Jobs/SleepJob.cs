@@ -24,11 +24,11 @@ namespace PracaInzynierska.Utils.Jobs {
 				if ( bed_ != null ) bed_.IsFree = true;
 			} else if ( sender == owner_ ) {
 				owner_.HP.Value += e.Amount * 10;
-				owner_.Fatigue.Value += e.Amount * (bed_ == null ? 0.33f : 0.5f);
+				owner_.RestF.Value += e.Amount * (bed_ == null ? 0.33f : 0.5f);
 			} else throw new ArgumentException();
 		}
 
-		public override float WorkLeft => 10f-owner_.Fatigue.Value;
+		public override float WorkLeft => 10f - owner_.RestF.Value;
 
 		public override IEnumerable<MapField> Location {
 			get {

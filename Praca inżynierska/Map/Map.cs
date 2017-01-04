@@ -8,6 +8,7 @@ using PracaInzynierska.Textures;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using static PracaInzynierska.Textures.MapTextures;
 
 namespace PracaInzynierska.Map {
 
@@ -35,7 +36,7 @@ namespace PracaInzynierska.Map {
 			Vector2i[] posList = new Vector2i[mapSeed.Count];
 
 			//Inicjalizacja startowyxh ziaren na mapie
-#if !TEST
+#if Debug
 		    Console.WriteLine("Initalizing seeds.");
 #endif
 			for ( int i = 0 ; i < mapSeed.Count ; ++i ) {
@@ -48,7 +49,7 @@ namespace PracaInzynierska.Map {
 					mapSeedValue[pos.X, pos.Y] = mapSeed[i];
 				} catch { Console.WriteLine("Error!"); }
 			}
-#if !TEST
+#if DEBUG
 			Console.WriteLine("Start seeds initialized.");
 #endif
 
@@ -71,12 +72,10 @@ namespace PracaInzynierska.Map {
 					} catch { Console.WriteLine("Error!"); }
 				});
 			});
-#if !TEST
+#if DEBUG
 			Console.WriteLine("Seeds initialized.");
-#endif
 
 			//Stworzenie pustego kontenera pol mapy
-#if !TEST
 			Console.WriteLine("Initalizing map fields.");
 #endif
 			Grid = new List<List<MapField>>(Size);
@@ -98,19 +97,19 @@ namespace PracaInzynierska.Map {
 					} catch ( Exception ex ) { Console.WriteLine(ex.StackTrace); }
 				});
 			});
-#if !TEST
+#if DEBUG
 			Console.WriteLine("Map fields initialized.");
 #endif
 		}
 
-        #endregion Constructors
+		#endregion Constructors
 
-        #region Events
+		#region Events
 
-        /// <summary>
-        /// Event uruchamiany przy odswierzaniu mapy
-        /// </summary>
-        public event EventHandler<UpdateEventArgs> UpdateTimeEvent;
+		/// <summary>
+		/// Event uruchamiany przy odswierzaniu mapy
+		/// </summary>
+		public event EventHandler<UpdateEventArgs> UpdateTimeEvent;
 
         /// <summary>
         /// Funkcja wywołująca event odswiezania mapy
@@ -235,7 +234,13 @@ namespace PracaInzynierska.Map {
 
 		    MapTextures.GenerateAll((uint)MapField.ScreenSize);
 
-		    MapResized?.Invoke(this, new MapResizedEventArgs(delta));
+			if ( Program.construct == "BED" ) {
+				Program.constructSprite = new Sprite(BedTexturePlanned);
+			} else if ( Program.construct == "WALL" ) {
+				Program.constructSprite = new Sprite(WallTexturePlanned);
+			} else if ( Program.construct == "TABLE" ) { Program.constructSprite = new Sprite(TableTexturePlanned); }
+
+			MapResized?.Invoke(this, new MapResizedEventArgs(delta));
 		}
 
         #endregion MapResizing
@@ -294,6 +299,11 @@ namespace PracaInzynierska.Map {
         public int Size { get; private set; }
 
         #endregion Properities
+
+	    public MapField GetMapFieldUnderCursor(Window window) {
+		    Vector2f pos = new Vector2f(Mouse.GetPosition(window).X, Mouse.GetPosition(window).Y);
+		    return this.FirstOrDefault(field => field.IsInside(pos));
+	    }
 
         #region PrivateVars
 

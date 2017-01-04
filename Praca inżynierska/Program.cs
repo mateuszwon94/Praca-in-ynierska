@@ -41,20 +41,25 @@ namespace PracaInzynierska {
 
 			DisplayTitle();
 
+#if DEBUG
 			WriteLine("Title displayed!");
 
 			//inicjalizacja mapy
 			WriteLine("Start map creating!");
+#endif
 			const int mapSize = 50;
 			map = new Map.Map(mapSize, new MapSeed((int)(mapSize / 5.0), (int)(mapSize / 10.0), (int)(mapSize / 15.0)));
 
 			window.MouseMoved += map.Map_MouseMoved;
 			window.MouseWheelScrolled += map.Map_MouseWheelScrolled;
+#if DEBUG
 			WriteLine("Map created!");
 
 			WriteLine("Start creating GUI!");
+#endif
 			//Tworzenie GUI
-			gui = new GUI() { new Button {
+			gui = new GUI() {
+								new Button {
 											   Name = "Close Button",
 											   IsActive = true,
 											   ButtonTexture = new Sprite(NormalButtonTexture),
@@ -64,19 +69,120 @@ namespace PracaInzynierska {
 																					   },
 											   Position = new Vector2f(20, window.Size.Y - 60),
 											   MouseButtonPressedHandler = (s, e) => {
-																			   if ( Mouse.IsButtonPressed(Mouse.Button.Left) ) window.Close();
+																			   if ( e.Button == Mouse.Button.Left ) window.Close();
 																		   }
 										   },
 								new BuildButton(font, window) {
-													  Name = "Build Button",
-													  IsActive = true,
-													  ButtonTexture = new Sprite(NormalButtonTexture),
-													  ButtonText = new Text("Buduj", font) {
-																							   CharacterSize = 20,
-																							   Color = Color.Black
-																						   },
-													  Position = new Vector2f(20, window.Size.Y - 120)
-												  }
+																  Name = "Build wall",
+																  IsActive = true,
+																  ButtonTexture = new Sprite(NormalButtonTexture),
+																  ButtonText = new Text("Mur", font) {
+																										 CharacterSize = 20,
+																										 Color = Color.Black
+																									 },
+																  Position = new Vector2f(20, window.Size.Y - 120),
+																  MouseButtonPressedHandler = (s, e) => {
+																								  if ( e.Button == Mouse.Button.Left ) {
+																									  construct = string.Empty;
+																									  constructSprite = null;
+																									  foreach ( Men selectedMen in SelectedMens ) { selectedMen.IsSelected = false; }
+																									  SelectedMens.Clear();
+
+																									  construct = "WALL";
+																									  constructSprite = new Sprite(WallTexturePlanned);
+																									  WasClicked = true;
+																								  }
+																							  }
+															  },
+								new BuildButton(font, window) {
+																  Name = "Build bed",
+																  IsActive = true,
+																  ButtonTexture = new Sprite(NormalButtonTexture),
+																  ButtonText = new Text("Łóżko", font) {
+																										   CharacterSize = 20,
+																										   Color = Color.Black
+																									   },
+																  Position = new Vector2f(150, window.Size.Y - 120),
+																  MouseButtonPressedHandler = (s, e) => {
+																								  if ( e.Button == Mouse.Button.Left ) {
+																									  construct = string.Empty;
+																									  constructSprite = null;
+																									  foreach ( Men selectedMen in SelectedMens ) { selectedMen.IsSelected = false; }
+																									  SelectedMens.Clear();
+
+																									  construct = "BED";
+																									  constructSprite = new Sprite(BedTexturePlanned);
+																									  WasClicked = true;
+																								  }
+																							  }
+															  },
+								new BuildButton(font, window) {
+																  Name = "Build table",
+																  IsActive = true,
+																  ButtonTexture = new Sprite(NormalButtonTexture),
+																  ButtonText = new Text("Stół", font) {
+																										  CharacterSize = 20,
+																										  Color = Color.Black
+																									  },
+																  Position = new Vector2f(150, window.Size.Y - 60),
+																  MouseButtonPressedHandler = (s, e) => {
+																								  if ( e.Button == Mouse.Button.Left ) {
+																									  construct = string.Empty;
+																									  constructSprite = null;
+																									  foreach ( Men selectedMen in SelectedMens ) { selectedMen.IsSelected = false; }
+																									  SelectedMens.Clear();
+
+																									  construct = "TABLE";
+																									  constructSprite = new Sprite(TableTexturePlanned);
+																									  WasClicked = true;
+																								  }
+																							  }
+															  },
+								new Button {
+											   Name = "Attack Button",
+											   IsActive = true,
+											   ButtonTexture = new Sprite(NormalButtonTexture),
+											   ButtonText = new Text("Atakuj!", font) {
+																						  CharacterSize = 20,
+																						  Color = Color.Black
+																					  },
+											   Position = new Vector2f(280, window.Size.Y - 120),
+											   MouseButtonPressedHandler = (s, e) => {
+																			   if ( e.Button == Mouse.Button.Left && SelectedMens.Count != 0 ) {
+																				   construct = string.Empty;
+																				   constructSprite = null;
+																				   Men beeing;
+
+																				   try {
+																					   beeing = (Men)(map.GetMapFieldUnderCursor(window)
+																										 .OnField
+																										 .First(b => b.GetType() == typeof(Men)));
+																				   } catch ( InvalidOperationException ) {
+																					   return;
+																				   }
+
+																				   foreach ( Men men in SelectedMens ) { men.Job = ((Men)beeing).AttackThis; }
+																			   }
+																		   }
+										   },
+								new Button {
+											   Name = "Clear Button",
+											   IsActive = true,
+											   ButtonTexture = new Sprite(NormalButtonTexture),
+											   ButtonText = new Text("Anuluj", font) {
+																						 CharacterSize = 20,
+																						 Color = Color.Black
+																					 },
+											   Position = new Vector2f(280, window.Size.Y - 60),
+											   MouseButtonPressedHandler = (s, e) => {
+																			   if ( e.Button == Mouse.Button.Left ) {
+																				   construct = string.Empty;
+																				   constructSprite = null;
+																				   foreach ( Men selectedMen in SelectedMens ) { selectedMen.IsSelected = false; }
+																				   SelectedMens.Clear();
+																			   }
+																		   }
+										   },
 							};
 
 			window.KeyPressed += gui.Window_KeyPressed;
@@ -85,21 +191,20 @@ namespace PracaInzynierska {
 			window.MouseButtonReleased += gui.Window_MouseButtonReleased;
 			window.MouseMoved += gui.Window_MouseMoved;
 			window.MouseWheelScrolled += gui.Window_MouseWheelScrolled;
+#if DEBUG
 			WriteLine("GUI created!");
 
 			WriteLine("Start creating colony!");
-			Colony colony = new Colony(map, window);
+#endif
+			Colony colony = new Colony(map[10, 20], map, window);
 			map.UpdateTimeEvent += colony.UpdateTime;
 			colony.AddColonist(new Men() {
 											 Name = "Adam",
 											 MoveSpeed = 5,
-											 Location = map[10, 20],
-											 TextureSelected = new Sprite(MenTextureSelected),
-											 TextureNotSelected = new Sprite(MenTexture),
 											 IsSelected = false,
 											 HP = new FuzzyHP(50f, 50f),
 											 Laziness = new FuzzyLaziness(2.5f),
-											 Fatigue = new FuzzyFatigue(10f),
+											 RestF = new FuzzyRest(10f),
 											 Strength = 5f,
 											 Morale = new FuzzyMorale(5f),
 											 Mining = 3f,
@@ -108,13 +213,10 @@ namespace PracaInzynierska {
 			colony.AddColonist(new Men() {
 											 Name = "Adam",
 											 MoveSpeed = 5,
-											 Location = map[10, 23],
-											 TextureSelected = new Sprite(MenTextureSelected),
-											 TextureNotSelected = new Sprite(MenTexture),
 											 IsSelected = false,
 											 HP = new FuzzyHP(50f, 50f),
 											 Laziness = new FuzzyLaziness(5f),
-											 Fatigue = new FuzzyFatigue(8f),
+											 RestF = new FuzzyRest(8f),
 											 Strength = 5f,
 											 Morale = new FuzzyMorale(5f),
 											 Mining = 10f,
@@ -123,30 +225,74 @@ namespace PracaInzynierska {
 			colony.AddColonist(new Men() {
 											 Name = "Adam",
 											 MoveSpeed = 5,
-											 Location = map[13, 20],
-											 TextureSelected = new Sprite(MenTextureSelected),
-											 TextureNotSelected = new Sprite(MenTexture),
 											 IsSelected = false,
 											 HP = new FuzzyHP(50f, 50f),
 											 Laziness = new FuzzyLaziness(7f),
-											 Fatigue = new FuzzyFatigue(3f),
+											 RestF = new FuzzyRest(3f),
 											 Strength = 7f,
 											 Morale = new FuzzyMorale(5f),
 											 Mining = 3f,
 											 Constructing = 4f,
 										 });
-			/*colony.AddConstruct(new Construct(2, 3, map[3, 3], Color.Magenta) {
-																				  MaxConstructPoints = 200
-																			  });*/
+			window.MouseButtonPressed += (sender, eventArgs) => {
+											  if ( eventArgs.Button == Mouse.Button.Left && construct != string.Empty && !WasClicked ) {
+												  MapField field = map.GetMapFieldUnderCursor(window);
+												  if ( field != null && field.IsAvaliable ) {
 
+													  try {
+														  Construct c;
+														  if ( construct == "BED" )
+															  c = new Bed(1, 1, field, Color.Blue) {
+																									   MaxConstructPoints = 200,
+																									   Name = "bed"
+																								   };
+														  else if ( construct == "WALL" )
+															  c = new Construct(1, 1, field, new Color(158, 158, 158)) {
+																														   MaxConstructPoints = 350,
+																														   Name = "bed"
+																													   };
+														  else if ( construct == "TABLE" )
+															  c = new Construct(2, 2, field, new Color(60, 60, 0)) {
+																													   MaxConstructPoints = 250,
+																													   Name = "bed"
+																												   };
+														  else throw new ArgumentException();
+
+														  colony.AddConstruct(c);
+													  } catch {
+														  // ignored
+													  }
+												  }
+											  }
+										  };
+
+			window.MouseButtonReleased += (sender, eventArgs) => {
+											  if ( eventArgs.Button == Mouse.Button.Left ) {
+												  foreach ( Beeing beeing in map.GetMapFieldUnderCursor(window).OnField ) {
+													  if ( beeing is Men colonist && colonist.Colony != null ) {
+														  if ( colonist.IsSelected ) {
+															  SelectedMens.Remove(colonist);
+															  colonist.IsSelected = false;
+														  } else {
+															  SelectedMens.Add(colonist);
+															  colonist.IsSelected = true;
+														  }
+													  }
+												  }
+											  }
+										  };
+#if DEBUG
 			WriteLine("Colony created!");
+#endif
 			Besiegers besigers = new Besiegers(map, colony);
 			map.UpdateTimeEvent += besigers.UpdateTime;
+#if DEBUG
 			WriteLine("Start creating besigers!");
 
 			WriteLine("Besigers created!");
 
-			/*WriteLine("Start creating herd!");
+			WriteLine("Start creating herd!");
+#endif
 			MapField mapField;
 			int center = map.Size / 2;
 			do {
@@ -154,19 +300,26 @@ namespace PracaInzynierska {
 				int y = rand.Next(center - center / 2, center + center / 2);
 				mapField = map[x, y];
 			} while ( !mapField.IsAvaliable );
+#if DEBUG
 			WriteLine($"Start from - {mapField}");
-
+#endif
 			Herd herd = new Herd(mapField, 5);
 
 			map.UpdateTimeEvent += herd.UpdateTime;
 			foreach ( Animal animal in herd ) { map.UpdateTimeEvent += animal.UpdateTime; }
-			WriteLine("Herd created!");*/
+#if DEBUG
+			WriteLine("Herd created!");
+#endif
+			gui.Add(new ColonySurface(colony, font, window) {
+																IsActive = true,
+															});
 
 			time.Start();
 
             //Główna petla gry
             while ( window.IsOpen && colony.Colonist.Count > 0) {
 				window.DispatchEvents();
+	            WasClicked = false;
 				window.Clear();
 
 				time.Stop();
@@ -177,7 +330,15 @@ namespace PracaInzynierska {
 
 				window.Draw(map);
 
-	            //window.Draw(herd);
+	            if ( construct != string.Empty ) {
+		            MapField field = map.GetMapFieldUnderCursor(window);
+		            if ( field != null ) {
+			            constructSprite.Position = field.ScreenPosition;
+			            window.Draw(constructSprite);
+		            }
+	            }
+
+	            window.Draw(herd);
 
 				window.Draw(besigers);
 
@@ -186,11 +347,11 @@ namespace PracaInzynierska {
 				window.Draw(gui);
 
 				window.Display();
+
+				GC.Collect();
 			}
 
-			window.Close();
-			WriteLine("PRZEGRAŁEŚ!");
-			ReadKey();
+			if ( window.IsOpen ) window.Close();
 		}
 
 		/// <summary>
@@ -253,38 +414,25 @@ namespace PracaInzynierska {
 			topic2.Origin = new Vector2f(topic2.GetGlobalBounds().Width / 2, topic2.GetGlobalBounds().Height / 2);
 			topic2.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 - 10);
 
-			Text topic3 = new Text("i problemu najkrótszej ścieżki w grze 2D.", font, 35) {
+			Text topic3 = new Text("i problemu najkrótszej ścieżki w grze 2D", font, 35) {
 							  Color = Color.White
 						  };
 			topic3.Origin = new Vector2f(topic3.GetGlobalBounds().Width / 2, topic3.GetGlobalBounds().Height / 2);
 			topic3.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 + 25);
 
-			Text prom = new Text("Promotor:", font, 20) {
+			Text prom = new Text("Opiekun:", font, 20) {
 							Color = Color.White
 						};
 			prom.Origin = new Vector2f(prom.GetGlobalBounds().Width / 2, prom.GetGlobalBounds().Height / 2);
-			prom.Position = new Vector2f(window.Size.X / 2 - 250, window.Size.Y / 2 + 120);
+			prom.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 + 120);
 
 			Text promName = new Text("dr inż. Janusz Malinowski", font, 20) {
 								Color = Color.White,
 								Style = Text.Styles.Italic
 							};
 			promName.Origin = new Vector2f(promName.GetGlobalBounds().Width / 2, promName.GetGlobalBounds().Height / 2);
-			promName.Position = new Vector2f(window.Size.X / 2 - 250, window.Size.Y / 2 + 145);
-
-			Text rec = new Text("Recenzent:", font, 20) {
-						   Color = Color.White
-					   };
-			rec.Origin = new Vector2f(rec.GetGlobalBounds().Width / 2, rec.GetGlobalBounds().Height / 2);
-			rec.Position = new Vector2f(window.Size.X / 2 + 250, window.Size.Y / 2 + 120);
-
-			Text recName = new Text("Unknown", font, 20) {
-							   Color = Color.White,
-							   Style = Text.Styles.Italic
-						   };
-			recName.Origin = new Vector2f(recName.GetGlobalBounds().Width / 2, recName.GetGlobalBounds().Height / 2);
-			recName.Position = new Vector2f(window.Size.X / 2 + 250, window.Size.Y / 2 + 145);
-
+			promName.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 + 145);
+			
 			Text wait = new Text("Proszę czekać. Trwa generowanie mapy.", font, 30) {
 							Color = Color.Red,
 							Style = Text.Styles.Bold
@@ -292,7 +440,7 @@ namespace PracaInzynierska {
 			wait.Origin = new Vector2f(wait.GetGlobalBounds().Width / 2, wait.GetGlobalBounds().Height / 2);
 			wait.Position = new Vector2f(window.Size.X / 2, window.Size.Y / 2 + 220);
 
-			Text time = new Text("Może to mi troszkę zająć. Cierpliwości :)", font, 20) {
+			Text time = new Text("Może mi to trochę zająć. Cierpliwości :)", font, 20) {
 							Color = Color.Red,
 							Style = Text.Styles.Bold | Text.Styles.Italic
 						};
@@ -312,8 +460,6 @@ namespace PracaInzynierska {
 			window.Draw(topic3);
 			window.Draw(prom);
 			window.Draw(promName);
-			window.Draw(rec);
-			window.Draw(recName);
 			window.Draw(wait);
 			window.Draw(time);
 			window.Display();
@@ -414,6 +560,8 @@ namespace PracaInzynierska {
 			}
 		}
 
+		internal static Sprite constructSprite = null;
+		internal static string construct = string.Empty;
 
 		/// <summary>
 		/// Podstawowa czcionka
@@ -425,9 +573,14 @@ namespace PracaInzynierska {
 		internal static Map.Map map;
 		internal static GUI gui;
 
+		internal static readonly List<Men> SelectedMens = new List<Men>();
+
 		public static Random rand = new Random();
 
 		//Zmienne do odmierzania czasu, ktory uplynal
 		private static readonly Stopwatch time = new Stopwatch();
+
+
+		private static bool WasClicked;
 	}
 }

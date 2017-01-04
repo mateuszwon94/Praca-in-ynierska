@@ -3,12 +3,26 @@ using System.ComponentModel;
 using PracaInzynierska.Utils.FuzzyLogic.Func;
 
 namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
+	
+	/// <summary>
+	/// Zmienna rozmyta reprezentujaca poziom zdrowia postaci
+	/// </summary>
 	public class FuzzyHP : FuzzyVariable {
+
+		/// <summary>
+		/// Konstruktor tworzacy zmienna rozmyta na podstawie przekazanej wartosci ostrej
+		/// </summary>
+		/// <param name="value">Wartosc ostra zmiennej</param>
+		/// <param name="maxHP">Maksymalny poziom zdrowia</param>
 		public FuzzyHP(float value, float maxHP) {
 			MaxHP = maxHP;
 			Value = value;
 		}
 
+		/// <summary>
+		/// Maksymalny poziom zdrowia.
+		/// Przy zapisie nowej wartosci wszystkie funkcje zostaja przedefiniowane
+		/// </summary>
 		public float MaxHP {
 			get { return maxHp_; }
 			set {
@@ -21,6 +35,7 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 			}
 		}
 
+		/// <inheritdoc />
 		public override float Value {
 			get { return value_; }
 			set {
@@ -29,8 +44,10 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 			}
 		}
 
+		/// <inheritdoc />
 		public override int StatesCount => (int)States.Full - (int)States.Dying + 1;
 
+		/// <inheritdoc />
 		public override void Fuzzify(string stateS) {
 			if ( stateS == nameof(States.Dying) ) {
 				FuzzyValue = (float)dyingFunc_.Invoke(Value);
@@ -56,6 +73,9 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 		private TraingularFunc highFunc_;
 		private LeftShoulderFunc fullFunc_;
 
+		/// <summary>
+		/// Enum skladajacy sie z nazw zbiorow rozmytych zawartych w zmiennej
+		/// </summary>
 		public enum States {
 			Dying = 0,
 			Low = 1,
@@ -67,6 +87,7 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 		private float value_;
 		private float maxHp_;
 
+		/// <inheritdoc />
 		public override void Fuzzify(int stateNo) {
 			if ( stateNo >= 0 && stateNo < StatesCount ) {
 				Fuzzify(((States)stateNo).ToString());

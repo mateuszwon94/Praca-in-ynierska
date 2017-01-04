@@ -3,7 +3,13 @@ using System.ComponentModel;
 using PracaInzynierska.Utils.FuzzyLogic.Func;
 
 namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
+
+	/// <summary>
+	/// Zmienna rozmyta reprezentujaca morale
+	/// </summary>
 	public class FuzzyMorale : FuzzyVariable {
+
+		/// <inheritdoc cref="FuzzyVariable"/>
 		public FuzzyMorale(float value) : base(value) {
 			brokenFunc_ = new RightShoulderFunc(-9, -5);
 			lowFunc_ = new TrapezoidFunc(-9, -5, -3, -2);
@@ -12,8 +18,10 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 			fullFunc_ = new LeftShoulderFunc(5, 9);
 		}
 
+		/// <inheritdoc cref="FuzzyVariable"/>
 		public override int StatesCount => (int)States.Full - (int)States.Broken + 1;
 
+		/// <inheritdoc cref="FuzzyVariable"/>
 		public override void Fuzzify(string stateS) {
 			if ( stateS == nameof(States.Broken) ) {
 				FuzzyValue = (float)brokenFunc_.Invoke(Value);
@@ -39,6 +47,9 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 		private TrapezoidFunc highFunc_;
 		private LeftShoulderFunc fullFunc_;
 
+		/// <summary>
+		/// Enum z nazwami zbiorów rozmytych zawartych w tej zmiennej
+		/// </summary>
 		public enum States {
 			Broken = 0,
 			Low = 1,
@@ -47,6 +58,7 @@ namespace PracaInzynierska.Utils.FuzzyLogic.Variables {
 			Full = 4
 		}
 
+		/// <inheritdoc cref="FuzzyVariable"/>
 		public override void Fuzzify(int stateNo) {
 			if ( stateNo >= 0 && stateNo < StatesCount ) {
 				Fuzzify(((States)stateNo).ToString());

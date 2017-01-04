@@ -181,6 +181,6 @@ namespace PracaInzynierska.Utils.Algorithm {
 	                konY_;
 	    private int counter_;
 
-		protected static readonly Random rand_ = new Random();
+		private static readonly Random rand_ = new Random();
 	}
 }

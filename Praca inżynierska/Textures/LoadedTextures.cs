@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using SFML.Graphics;
 using SFML.System;
@@ -24,6 +24,13 @@ namespace PracaInzynierska.Textures {
 			OpenListTexture = GenerateMapTexture(screenSize, new Color(0, 0, 255, 127));
 			CloseListTexture = GenerateMapTexture(screenSize, new Color(255, 0, 0, 127));
 			CurrentFieldTexture = GenerateMapTexture(screenSize, new Color(Color.Magenta.R, Color.Magenta.G, Color.Magenta.B, 127));
+
+			BedTexture = GenerateConstructTexture(screenSize, screenSize, new Color(Color.Blue.R, Color.Blue.G, Color.Blue.B, 255));
+			BedTexturePlanned = GenerateConstructTexture(screenSize, screenSize, new Color(Color.Blue.R, Color.Blue.G, Color.Blue.B, 50));
+			WallTexture = GenerateConstructTexture(screenSize, screenSize, new Color(75, 75, 75, 255));
+			WallTexturePlanned = GenerateConstructTexture(screenSize, screenSize, new Color(75, 75, 75, 50));
+			TableTexture = GenerateConstructTexture(screenSize * 2, screenSize * 2, new Color(60, 60, 0, 255));
+			TableTexturePlanned = GenerateConstructTexture(screenSize * 2, screenSize * 2, new Color(60, 60, 0, 50));
 
 			MenTexture = GenerateBeeingTexture(screenSize, Color.Cyan);
 			MenTextureSelected = GenerateBeeingTexture(screenSize, Color.Magenta);
@@ -75,24 +82,24 @@ namespace PracaInzynierska.Textures {
 		}
 
 		public static Texture GenerateConstructTexture(uint screenSizeX, uint screenSizeY, Color color) {
-			if ( !textures_.Keys.Contains(color) ) {
+			if ( !textures_.Keys.Contains((color, screenSizeX, screenSizeY)) ) {
 				RenderTexture renderTexture = new RenderTexture(screenSizeX, screenSizeY);
 				renderTexture.Clear(Color.Transparent);
-				RectangleShape rect = new RectangleShape(new Vector2f(screenSizeX, screenSizeY)) {
+				RectangleShape rect = new RectangleShape(new Vector2f(screenSizeX-1, screenSizeY-1)) {
 																									 FillColor = color,
 																									 Position = new Vector2f(1, 1),
 																									 OutlineThickness = 1,
 																									 OutlineColor = Color.Black,
 																								 };
 				renderTexture.Draw(rect);
-				textures_[color] = new Texture(renderTexture.Texture) {
+				textures_[(color,screenSizeX,screenSizeY)] = new Texture(renderTexture.Texture) {
 																		  Smooth = true
 																	  };
 			}
-			return textures_[color];
+			return textures_[(color, screenSizeX, screenSizeY)];
 		}
 
-		private static Dictionary<Color,Texture> textures_ = new Dictionary<Color, Texture>();
+		private static Dictionary<(Color,uint,uint),Texture> textures_ = new Dictionary<(Color, uint, uint), Texture>();
 
 		#endregion
 
@@ -140,6 +147,18 @@ namespace PracaInzynierska.Textures {
 		public static Texture CurrentFieldTexture { get; private set; }
 
 		public static Texture BesigerTexture { get; private set; }
+
+		public static Texture BedTexture { get; private set; }
+
+		public static Texture BedTexturePlanned { get; private set; }
+
+		public static Texture WallTexture { get; private set; }
+
+		public static Texture WallTexturePlanned { get; private set; }
+
+		public static Texture TableTexture { get; private set; }
+
+		public static Texture TableTexturePlanned { get; private set; }
 
 		#endregion
 
@@ -192,6 +211,8 @@ namespace PracaInzynierska.Textures {
 		/// Tekstura Zwyklego przycisku
 		/// </summary>
 		public static Texture NormalButtonTexture { get; private set; }
+
+		public static Texture ColonySurfaceTexture { get; private set; }
 
 		#endregion
 

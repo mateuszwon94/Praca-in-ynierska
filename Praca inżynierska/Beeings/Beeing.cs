@@ -159,7 +159,7 @@ namespace PracaInzynierska.Beeings {
 		public MapField Location {
 			get { return mapField_; }
 			set {
-				value.OnField.Remove(this);
+				mapField_?.OnField.Remove(this);
 				mapField_ = value;
 				mapField_.OnField.Add(this);
 			}

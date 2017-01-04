@@ -17,13 +17,13 @@ namespace PracaInzynierska.Utils {
 		public Besiegers(Map.Map map, Colony colony) {
 			map_ = map;
 			colony_ = colony;
-			counter_ = new TimeSpan(0, rand_.Next(2), rand_.Next(60));
+			counter_ = new TimeSpan(0, rand_.Next(1, 15), rand_.Next(60));
 			besigers_ = new List<Men>();
 		}
 
 		public void RemoveBesiger(Men besiger) {
+			map_.UpdateTimeEvent -= besiger.UpdateTime;
 			besigersToRemove_.Add(besiger);
-			map_.UpdateTimeEvent += besiger.UpdateTime;
 		}
 
 		/// <summary>
@@ -38,7 +38,7 @@ namespace PracaInzynierska.Utils {
 		}
 
 		public void UpdateTime(object sender, UpdateEventArgs e) {
-			Console.WriteLine($"{State} \t {counter_:g} \t \t {preparationCounter_:g}");
+			//Console.WriteLine($"{State} \t {counter_:g} \t \t {preparationCounter_:g}");
 
 			for ( int index = 0 ; index < besigers_.Count ; ) {
 				if ( besigers_[index].HP.Value > 0f ) {
@@ -88,7 +88,7 @@ namespace PracaInzynierska.Utils {
 												IsSelected = false,
 												HP = new FuzzyHP(50f, 50f),
 												Laziness = new FuzzyLaziness((float)rand_.NextDouble() * 10f),
-												Fatigue = new FuzzyFatigue((float)rand_.NextDouble() * 10f),
+												RestF = new FuzzyRest((float)rand_.NextDouble() * 10f),
 												Strength = (float)rand_.NextDouble() * 10f,
 												Morale = new FuzzyMorale(7.5f),
 												Mining = (float)rand_.NextDouble() * 10f,
@@ -99,9 +99,8 @@ namespace PracaInzynierska.Utils {
 				foreach ( Men besiger in besigers_ ) { map_.UpdateTimeEvent += besiger.UpdateTime; }
 
 				State = Status.Preparation;
-			} else if ( State == Status.Preparation )
-			{
-				if (preparationCounter_ == null) preparationCounter_ = new TimeSpan(0, 0, rand_.Next(60));
+			} else if ( State == Status.Preparation ) {
+				if ( preparationCounter_ == null ) preparationCounter_ = new TimeSpan(0, rand_.Next(1, 5), rand_.Next(60));
 				preparationCounter_ -= e.Elapsed;
 
 				if ( preparationCounter_ <= TimeSpan.Zero) {
@@ -140,7 +139,7 @@ namespace PracaInzynierska.Utils {
 				}
 			} else if ( counter_ <= TimeSpan.Zero ) {
 				State = Status.Spawning;
-				counter_ = new TimeSpan(0, rand_.Next(2), rand_.Next(60));
+				counter_ = new TimeSpan(0, rand_.Next(1, 15), rand_.Next(60));
 			} else if ( State == Status.None ) counter_ -= e.Elapsed;
 		}
 

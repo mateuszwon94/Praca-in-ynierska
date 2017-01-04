@@ -20,7 +20,7 @@ namespace PracaInzynierska.Constructs
 			public override void Work(object sender, JobEventArgs e) {
 				if ( sender is Men men ) {
 					parent_.ConstructPoints += e.Amount * men.Constructing * 10;
-					men.Fatigue.Value -= e.Amount;
+					men.RestF.Value -= e.Amount;
 				} else throw new ArgumentException();
 			}
 

@@ -220,7 +220,11 @@ namespace PracaInzynierska.Map {
 					}
 				}
 
-				if ( ConstructOn != null && ConstructOn.BaseField == this ) { ConstructOn.ScreenPosition = ScreenPosition; }
+				if (ConstructOn != null && ConstructOn.BaseField == this)
+				{
+					ConstructOn.SetTextureFromColor();
+					ConstructOn.Texture.Position = ScreenPosition;
+				}
 			}
 		}
 
@@ -294,6 +298,11 @@ namespace PracaInzynierska.Map {
 									 (from.MapPosition.X - to.MapPosition.X) +
 									 (from.MapPosition.Y - to.MapPosition.Y) *
 									 (from.MapPosition.Y - to.MapPosition.Y)), 4);
+		}
+
+		public bool IsInside(Vector2f pos) {
+			return pos.X >= ScreenPosition.X && ScreenPosition.X + ScreenSize >= pos.X &&
+				   pos.Y >= ScreenPosition.Y && ScreenPosition.Y + ScreenSize >= pos.Y;
 		}
 
 		#endregion Funcs

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using PracaInzynierska.Constructs;
 using PracaInzynierska.Events;
 using PracaInzynierska.Events.Job;
 using PracaInzynierska.Map;
@@ -13,37 +14,76 @@ using SFML.Window;
 using static System.Math;
 using static PracaInzynierska.Utils.Algorithm.PathFinding.Metric;
 
-namespace PracaInzynierska.Beeings
-{
+namespace PracaInzynierska.Beeings {
 
 	/// <summary>
 	/// Klasa odpowiadajaca za ludzi
 	/// </summary>
 	public partial class Men : Beeing {
+
+		/// <summary>
+		/// Konstruktor domyślny tworzacy czlowieka
+		/// </summary>
 		public Men() : base() {
-			heuristic_ = EuclideanDistance;
+			heuristic_ = ManhattanDistance;
 
 			Rest = new RestJob(this);
 			AttackThis = new AttackJob(this);
 		}
 
+		/// <summary>
+		/// Imie postaci
+		/// </summary>
 		public string Name { get; set; }
 
-		public Job Job { get; set; }
+		/// <summary>
+		/// Praca jaka ma wykonac postac
+		/// </summary>
+		public Job Job {
+			get { return job_; }
+			set {
+				if (Colony != null && Job is Construct.ConstructingJob) Colony.JobQueue.Enqueue(Job, 0.5f);
+				job_ = value;
+			}
+		}
 
+		/// <summary>
+		/// Praca odpoczywania danej postaci
+		/// </summary>
 		public RestJob Rest { get; private set; }
 
+		/// <summary>
+		/// Zdolnosci konstrukcyjne
+		/// </summary>
 		public float Constructing { get; set; }
+
+		/// <summary>
+		/// Zdolnosci gornicze
+		/// </summary>
 		public float Mining { get; set; }
 
-		public FuzzyFatigue Fatigue { get; set; }
+		/// <summary>
+		/// Poziom zmeczenia postaci
+		/// </summary>
+		public FuzzyRest RestF { get; set; }
 
+		/// <summary>
+		/// Poziom lenistwa postaci
+		/// </summary>
 		public FuzzyLaziness Laziness { get; set; }
 
+		/// <summary>
+		/// Poziom morale postaci
+		/// </summary>
 		public FuzzyMorale Morale { get; set; }
 
+		/// <summary>
+		/// Funkcja wywolywana kiedy postac umze
+		/// </summary>
 		public override void Die() {
-			if ( Colony != null && Job != null ) { Colony.JobQueue.Enqueue(Job, Job.Location.All(field => !field.IsAvaliable) ? 3f : 0.5f); }
+			if ( Colony != null && Job != null ) {
+				Colony.JobQueue.Enqueue(Job, Job.Location.All(field => !field.IsAvaliable) ? 3f : 0.5f);
+			}
 		}
 
 		/// <summary>
@@ -116,7 +156,9 @@ namespace PracaInzynierska.Beeings
 					Job = null;
 				} else if ( Job.State == Job.Status.Done ) {
 					Job = null;
+#if DEBUG
 					Console.WriteLine("Job DONE!");
+#endif
 				} else if ( !Job.IsInLocation(Location) ) {
 					if ( GoToField == null ) GoToField = Closest(Job.Location);
 					Go(e.UpdateTime);
@@ -158,7 +200,10 @@ namespace PracaInzynierska.Beeings
 			}
 		}
 
-		public AttackJob AttackThis { get; private set; } 
+		/// <summary>
+		/// Praca ataku na ta postać
+		/// </summary>
+		public AttackJob AttackThis { get; private set; }
 
 		/// <summary>Returns a string that represents the current object.</summary>
 		/// <returns>A string that represents the current object.</returns>
@@ -166,5 +211,6 @@ namespace PracaInzynierska.Beeings
 
 		private Sprite textureSelected_;
 		private Sprite textureNotSelected_;
+		private Job job_;
 	}
 }
